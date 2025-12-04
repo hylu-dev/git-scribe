@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'models/theme_model.dart';
 import 'themes/themes.dart';
+import 'widgets/github_login_button.dart';
 
 void main() {
   runApp(const MyApp());
@@ -48,12 +49,17 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title, required this.themeModel});
 
   final String title;
   final ThemeModel themeModel;
 
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,13 +68,15 @@ class MyHomePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(title, style: Theme.of(context).textTheme.headlineLarge),
+            Text(
+              widget.title,
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
             const SizedBox(height: 24),
-            FilledButton(
+            GitHubLoginButton(
               onPressed: () {
-                // Button action
+                // TODO: Handle GitHub login
               },
-              child: const Text('Continue'),
             ),
           ],
         ),
