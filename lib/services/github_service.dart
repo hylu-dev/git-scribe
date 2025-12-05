@@ -16,22 +16,30 @@ class GitHubService {
     return session?.providerToken;
   }
 
-  /// Fetch all repositories for the authenticated user
+  /// Fetch repositories for the authenticated user (paginated)
   /// Returns a list of repositories sorted by most recently updated
+  /// Includes repositories owned by the user, where they're a collaborator,
+  /// and from organizations they're a member of
   Future<List<GitHubRepository>> getUserRepositories({
     String? sort = 'updated',
     String? direction = 'desc',
-    int perPage = 100,
+    int page = 1,
+    int perPage = 10,
+    String? affiliation,
   }) async {
     final token = _getAccessToken();
     if (token == null) {
       throw Exception('No GitHub access token found. Please sign in again.');
     }
 
+    // Include all affiliations: owner, collaborator, and organization_member
+    final affiliationParam =
+        affiliation ?? 'owner,collaborator,organization_member';
+
     try {
       final response = await http.get(
         Uri.parse(
-          '$_baseUrl/user/repos?sort=$sort&direction=$direction&per_page=$perPage',
+          '$_baseUrl/user/repos?sort=$sort&direction=$direction&per_page=$perPage&page=$page&affiliation=$affiliationParam',
         ),
         headers: {
           'Authorization': 'Bearer $token',
