@@ -52,11 +52,39 @@ class _MyAppState extends State<MyApp> {
   // Root widget of the application
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'GitScribe',
-      theme: _themeModel.theme,
-      routerConfig: AppRouter.router,
-      debugShowCheckedModeBanner: false,
+    return ThemeModelProvider(
+      themeModel: _themeModel,
+      child: MaterialApp.router(
+        title: 'GitScribe',
+        theme: _themeModel.theme,
+        routerConfig: AppRouter.router,
+        debugShowCheckedModeBanner: false,
+      ),
     );
+  }
+}
+
+/// InheritedWidget to provide ThemeModel to the widget tree
+class ThemeModelProvider extends InheritedWidget {
+  final ThemeModel themeModel;
+
+  const ThemeModelProvider({
+    super.key,
+    required this.themeModel,
+    required super.child,
+  });
+
+  static ThemeModel of(BuildContext context) {
+    final provider = context
+        .dependOnInheritedWidgetOfExactType<ThemeModelProvider>();
+    if (provider == null) {
+      throw Exception('ThemeModelProvider not found in widget tree');
+    }
+    return provider.themeModel;
+  }
+
+  @override
+  bool updateShouldNotify(ThemeModelProvider oldWidget) {
+    return themeModel != oldWidget.themeModel;
   }
 }

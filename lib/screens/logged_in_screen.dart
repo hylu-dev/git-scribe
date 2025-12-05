@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/github_service.dart';
 import '../models/github_repository.dart';
+import '../widgets/theme_selector.dart';
 
 /// Screen shown after successful authentication
 class LoggedInScreen extends StatefulWidget {
@@ -89,6 +90,11 @@ class _LoggedInScreenState extends State<LoggedInScreen>
       appBar: AppBar(
         title: const Text('GitScribe'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.palette),
+            onPressed: () => ThemeSelector.show(context),
+            tooltip: 'Select Theme',
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {

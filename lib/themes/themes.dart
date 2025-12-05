@@ -11,6 +11,20 @@ class Themes {
     theme: _buildFlutterDefault(),
   );
 
+  /// Flutter Light theme - Flutter's default Material 3 light theme
+  static AppTheme get flutterLight => AppTheme(
+    name: 'Light',
+    description: 'Flutter\'s default Material 3 light theme',
+    theme: _buildFlutterLight(),
+  );
+
+  /// Gruvbox theme - Retro groove color scheme
+  static AppTheme get gruvbox => AppTheme(
+    name: 'Gruvbox',
+    description: 'Retro groove color scheme',
+    theme: _buildGruvbox(),
+  );
+
   /// Monokai theme - Classic dark theme with vibrant colors
   static AppTheme get monokai => AppTheme(
     name: 'Monokai',
@@ -63,6 +77,8 @@ class Themes {
   /// Get all programming themes
   static List<AppTheme> get all => [
     flutterDefault,
+    flutterLight,
+    gruvbox,
     monokai,
     dracula,
     oneDark,
@@ -75,6 +91,36 @@ class Themes {
   // Flutter Default theme implementation
   static ThemeData _buildFlutterDefault() {
     final baseTheme = ThemeData.dark(useMaterial3: true);
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Flutter Light theme implementation
+  static ThemeData _buildFlutterLight() {
+    final baseTheme = ThemeData.light(useMaterial3: true);
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Gruvbox theme implementation
+  static ThemeData _buildGruvbox() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF282828),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF458588),
+        secondary: Color(0xFF98971A),
+        surface: Color(0xFF3C3836),
+        error: Color(0xFFCC241D),
+        onPrimary: Color(0xFFEBDBB2),
+        onSecondary: Color(0xFF282828),
+        onSurface: Color(0xFFEBDBB2),
+        onError: Color(0xFFFFFFFF),
+      ),
+    );
     return baseTheme.copyWith(
       textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
     );
