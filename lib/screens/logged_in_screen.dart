@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/github_service.dart';
 import '../models/github_repository.dart';
 import '../widgets/theme_selector.dart';
+import '../widgets/breadcrumbs.dart';
 
 /// Screen shown after successful authentication
 class LoggedInScreen extends StatefulWidget {
@@ -122,6 +123,13 @@ class _LoggedInScreenState extends State<LoggedInScreen>
       ),
       body: Column(
         children: [
+          // Breadcrumbs
+          Breadcrumbs(
+            items: const [
+              BreadcrumbItem(label: 'Repositories', route: '/home'),
+            ],
+          ),
+          const Divider(height: 1),
           // User profile header
           Container(
             padding: const EdgeInsets.all(16),

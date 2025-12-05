@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/github_service.dart';
 import '../models/github_branch.dart';
+import '../widgets/breadcrumbs.dart';
 
 /// Screen that displays branches for a repository
 class RepositoryBranchesScreen extends StatefulWidget {
@@ -79,7 +80,23 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Column(
+        children: [
+          // Breadcrumbs
+          Breadcrumbs(
+            items: [
+              const BreadcrumbItem(label: 'Repositories', route: '/home'),
+              BreadcrumbItem(
+                label: widget.repoName,
+                route: null, // Current page, not clickable
+              ),
+            ],
+          ),
+          const Divider(height: 1),
+          // Main content
+          Expanded(child: _buildBody()),
+        ],
+      ),
     );
   }
 
