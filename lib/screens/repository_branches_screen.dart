@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/github_service.dart';
 import '../models/github_branch.dart';
 
@@ -58,6 +59,17 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+          tooltip: 'Back',
+        ),
         title: Text(widget.repoName),
         actions: [
           IconButton(
