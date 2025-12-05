@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../services/auth_service.dart';
 import '../services/github_service.dart';
 import '../models/github_repository.dart';
-import '../widgets/theme_selector.dart';
+import '../widgets/app_header.dart';
 import '../widgets/breadcrumbs.dart';
 
 /// Screen shown after successful authentication
@@ -25,7 +24,6 @@ class _LoggedInScreenState extends State<LoggedInScreen>
   static const double _maxStartPosition = 0.85;
   static const double _slideOffset = 30.0;
 
-  final AuthService _authService = AuthService();
   final GitHubService _githubService = GitHubService();
   List<GitHubRepository> _repositories = [];
   bool _isLoading = true;
@@ -83,29 +81,8 @@ class _LoggedInScreenState extends State<LoggedInScreen>
 
   @override
   Widget build(BuildContext context) {
-    final displayName = _authService.userDisplayName ?? 'User';
-    final avatarUrl = _authService.userAvatarUrl;
-    final email = _authService.userEmail;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('GitScribe'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.palette),
-            onPressed: () => ThemeSelector.show(context),
-            tooltip: 'Select Theme',
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _authService.signOut();
-            },
-            tooltip: 'Logout',
-          ),
-        ],
-      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _isLoading ? null : _loadRepositories,
         icon: _isLoading
@@ -123,52 +100,17 @@ class _LoggedInScreenState extends State<LoggedInScreen>
       ),
       body: Column(
         children: [
-          // Breadcrumbs
-          Breadcrumbs(
-            items: const [
+          // Shared header
+          AppHeader(
+            breadcrumbs: const [
               BreadcrumbItem(label: 'Repositories', route: '/home'),
             ],
-          ),
-          const Divider(height: 1),
-          // User profile header
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                if (avatarUrl != null)
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundImage: NetworkImage(avatarUrl),
-                  )
-                else
-                  CircleAvatar(
-                    radius: 30,
-                    child: Text(
-                      displayName[0].toUpperCase(),
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayName,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      if (email != null)
-                        Text(
-                          email,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+            trailingAction: IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _isLoading ? null : _loadRepositories,
+              tooltip: 'Refresh',
             ),
           ),
-          const Divider(height: 1),
           // Repositories list
           Expanded(child: _buildRepositoriesList()),
         ],

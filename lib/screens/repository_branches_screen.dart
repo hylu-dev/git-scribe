@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../services/github_service.dart';
 import '../models/github_branch.dart';
+import '../widgets/app_header.dart';
 import '../widgets/breadcrumbs.dart';
 
 /// Screen that displays branches for a repository
@@ -59,40 +59,23 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
-          tooltip: 'Back',
-        ),
-        title: Text(widget.repoName),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _loadBranches,
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
       body: Column(
         children: [
-          // Breadcrumbs
-          Breadcrumbs(
-            items: [
+          // Shared header with breadcrumbs
+          AppHeader(
+            breadcrumbs: [
               const BreadcrumbItem(label: 'Repositories', route: '/home'),
               BreadcrumbItem(
                 label: widget.repoName,
                 route: null, // Current page, not clickable
               ),
             ],
+            trailingAction: IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _isLoading ? null : _loadBranches,
+              tooltip: 'Refresh',
+            ),
           ),
-          const Divider(height: 1),
           // Main content
           Expanded(child: _buildBody()),
         ],
@@ -127,8 +110,8 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
                 _errorMessage!,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -190,9 +173,9 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
         ),
         title: Text(
           branch.name,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: branch.sha != null
             ? Column(
@@ -217,4 +200,3 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
     );
   }
 }
-
