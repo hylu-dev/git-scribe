@@ -4,6 +4,7 @@ import '../models/github_repository.dart';
 import '../widgets/app_header.dart';
 import '../widgets/breadcrumbs.dart';
 import '../widgets/repository_card.dart';
+import '../widgets/lazy_load_list_view.dart';
 
 /// Screen shown after successful authentication
 class LoggedInScreen extends StatefulWidget {
@@ -25,12 +26,10 @@ class _LoggedInScreenState extends State<LoggedInScreen>
   static const double _slideOffset = 30.0;
 
   final GitHubService _githubService = GitHubService();
-  final ScrollController _scrollController = ScrollController();
   List<GitHubRepository> _repositories = [];
   bool _isLoading = true;
   bool _isLoadingMore = false;
   bool _hasMore = true;
-  int _currentPage = 1;
   String? _errorMessage;
   late AnimationController _animationController;
   bool _showItems = false;
@@ -42,25 +41,13 @@ class _LoggedInScreenState extends State<LoggedInScreen>
       vsync: this,
       duration: _animationDuration,
     );
-    _scrollController.addListener(_onScroll);
     _loadRepositories();
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _animationController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent * 0.8 &&
-        !_isLoadingMore &&
-        _hasMore &&
-        !_isLoading) {
-      _loadMoreRepositories();
-    }
   }
 
   Future<void> _loadRepositories() async {
@@ -68,7 +55,6 @@ class _LoggedInScreenState extends State<LoggedInScreen>
       _isLoading = true;
       _errorMessage = null;
       _showItems = false;
-      _currentPage = 1;
       _hasMore = true;
       _repositories = [];
     });
@@ -83,7 +69,6 @@ class _LoggedInScreenState extends State<LoggedInScreen>
         _repositories = repos;
         _isLoading = false;
         _hasMore = repos.length == 10; // If we got 10, there might be more
-        _currentPage = 1;
       });
       // Start cascade animation after a brief delay
       Future.delayed(_animationStartDelay, () {
@@ -103,31 +88,30 @@ class _LoggedInScreenState extends State<LoggedInScreen>
     }
   }
 
-  Future<void> _loadMoreRepositories() async {
-    if (_isLoadingMore || !_hasMore) return;
-
+  Future<List<GitHubRepository>> _loadMoreRepositories(int page) async {
     setState(() {
       _isLoadingMore = true;
     });
 
     try {
-      final nextPage = _currentPage + 1;
       final repos = await _githubService.getUserRepositories(
-        page: nextPage,
+        page: page,
         perPage: 10,
       );
 
       setState(() {
         _repositories.addAll(repos);
-        _isLoadingMore = false;
         _hasMore = repos.length == 10; // If we got 10, there might be more
-        _currentPage = nextPage;
+        _isLoadingMore = false;
       });
+
+      return repos;
     } catch (e) {
       setState(() {
-        _isLoadingMore = false;
         _errorMessage = e.toString();
+        _isLoadingMore = false;
       });
+      rethrow;
     }
   }
 
@@ -237,26 +221,20 @@ class _LoggedInScreenState extends State<LoggedInScreen>
       );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: _repositories.length + (_hasMore ? 1 : 0),
+    return LazyLoadListView<GitHubRepository>(
+      items: _repositories,
+      itemBuilder: (context, repo, index) {
+        return _buildAnimatedRepositoryCard(repo, index);
+      },
+      loadMore: _loadMoreRepositories,
+      hasMore: _hasMore,
+      isLoadingMore: _isLoadingMore,
       padding: const EdgeInsets.fromLTRB(
         8,
         8,
         8,
         80,
       ), // Extra bottom padding for FAB
-      itemBuilder: (context, index) {
-        if (index >= _repositories.length) {
-          // Loading indicator at the bottom
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final repo = _repositories[index];
-        return _buildAnimatedRepositoryCard(repo, index);
-      },
     );
   }
 
