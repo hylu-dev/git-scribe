@@ -15,6 +15,7 @@ class AuthService {
         redirectTo: kIsWeb
             ? '${Uri.base.origin}/auth/callback}' // ← web: let Supabase pick the right URL
             : _getRedirectUrl(), // ← mobile: your deep link
+        scopes: 'repo gist notifications',
       );
       return true;
     } catch (e) {
@@ -69,4 +70,10 @@ class AuthService {
 
   /// Stream of auth state changes
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
+
+  /// Get the GitHub provider token from the current session
+  /// Returns null if no token is available
+  /// Note: The provider token is only available if Supabase is configured
+  /// to store it. Check your Supabase Dashboard settings.
+  String? get providerToken => _supabase.auth.currentSession?.providerToken;
 }
