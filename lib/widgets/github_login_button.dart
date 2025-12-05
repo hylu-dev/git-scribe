@@ -14,7 +14,7 @@ class GitHubLoginButton extends StatelessWidget {
       icon: const FaIcon(FontAwesomeIcons.github, size: 20),
       label: const Text('Log in with GitHub'),
       style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
       ),
     );
   }
