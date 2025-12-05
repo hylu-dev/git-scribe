@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_service.dart';
 
@@ -9,9 +10,11 @@ class AuthService {
   /// Returns true if the OAuth flow was initiated successfully
   Future<bool> signInWithGitHub() async {
     try {
-      await _supabase.auth.signInWithOAuth(
+      await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.github,
-        redirectTo: _getRedirectUrl(),
+        redirectTo: kIsWeb
+            ? '${Uri.base.origin}/auth/callback}' // ← web: let Supabase pick the right URL
+            : _getRedirectUrl(), // ← mobile: your deep link
       );
       return true;
     } catch (e) {
@@ -58,7 +61,10 @@ class AuthService {
     // 1. Supabase Dashboard > Authentication > URL Configuration
     // 2. Android: AndroidManifest.xml (already configured)
     // 3. iOS: Info.plist (already configured)
-    return 'io.supabase.gitscribe://login-callback';
+    //
+    // IMPORTANT: Add this exact URL to your Supabase Dashboard:
+    // Authentication > URL Configuration > Redirect URLs
+    return 'io.supabase.gitscribe://callback';
   }
 
   /// Stream of auth state changes
