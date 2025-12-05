@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../services/github_service.dart';
 import '../models/github_repository.dart';
@@ -355,8 +356,14 @@ class _LoggedInScreenState extends State<LoggedInScreen>
           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
         ),
         onTap: () {
-          // TODO: Navigate to repository details or open in browser
-          // You can use url_launcher to open the repo URL
+          // Navigate to repository branches screen
+          final parts = repo.fullName.split('/');
+          if (parts.length == 2) {
+            context.goNamed(
+              'repository-branches',
+              pathParameters: {'owner': parts[0], 'name': parts[1]},
+            );
+          }
         },
       ),
     );

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'services/auth_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/logged_in_screen.dart';
+import 'screens/repository_branches_screen.dart';
 
 /// Router configuration for the app
 class AppRouter {
@@ -37,27 +38,28 @@ class AppRouter {
     refreshListenable: _authStateNotifier,
     redirect: (BuildContext context, GoRouterState state) {
       final isAuthenticated = _authService.isAuthenticated;
-      final isLoginRoute =
-          state.matchedLocation == '/login' || state.matchedLocation == '/';
-      final isHomeRoute = state.matchedLocation == '/home';
+      final location = state.uri.path;
+      final isLoginRoute = location == '/login' || location == '/';
+      final isHomeRoute = location == '/home';
+      final isRepoRoute = location.startsWith('/repo/');
 
       // If user is authenticated and trying to access login, redirect to home
       if (isAuthenticated && isLoginRoute) {
         return '/home';
       }
 
-      // If user is not authenticated and trying to access home, redirect to login
-      if (!isAuthenticated && isHomeRoute) {
+      // If user is not authenticated and trying to access protected routes, redirect to login
+      if (!isAuthenticated && (isHomeRoute || isRepoRoute)) {
         return '/login';
       }
 
       // If at root and not authenticated, go to login
-      if (!isAuthenticated && state.matchedLocation == '/') {
+      if (!isAuthenticated && location == '/') {
         return '/login';
       }
 
       // If at root and authenticated, go to home
-      if (isAuthenticated && state.matchedLocation == '/') {
+      if (isAuthenticated && location == '/') {
         return '/home';
       }
 
@@ -73,6 +75,20 @@ class AppRouter {
         path: '/home',
         name: 'home',
         builder: (context, state) => const LoggedInScreen(),
+      ),
+      GoRoute(
+        path: '/repo/:owner/:name',
+        name: 'repository-branches',
+        builder: (context, state) {
+          final owner = state.pathParameters['owner'] ?? '';
+          final name = state.pathParameters['name'] ?? '';
+          if (owner.isEmpty || name.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('Invalid repository path')),
+            );
+          }
+          return RepositoryBranchesScreen(owner: owner, repoName: name);
+        },
       ),
     ],
   );

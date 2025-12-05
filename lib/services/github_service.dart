@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/github_repository.dart';
+import '../models/github_branch.dart';
 import 'supabase_service.dart';
 
 /// Service for interacting with GitHub API
@@ -42,7 +43,9 @@ class GitHubService {
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = json.decode(response.body);
         return jsonList
-            .map((json) => GitHubRepository.fromJson(json as Map<String, dynamic>))
+            .map(
+              (json) => GitHubRepository.fromJson(json as Map<String, dynamic>),
+            )
             .toList();
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized. Please sign in again.');
@@ -95,5 +98,48 @@ class GitHubService {
       throw Exception('Error fetching repository: $e');
     }
   }
-}
 
+  /// Fetch all branches for a repository
+  /// Returns a list of branches for the given owner and repository
+  Future<List<GitHubBranch>> getRepositoryBranches(
+    String owner,
+    String repo, {
+    int perPage = 100,
+  }) async {
+    final token = _getAccessToken();
+    if (token == null) {
+      throw Exception('No GitHub access token found. Please sign in again.');
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/repos/$owner/$repo/branches?per_page=$perPage'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'GitScribe',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonList = json.decode(response.body);
+        return jsonList
+            .map((json) => GitHubBranch.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please sign in again.');
+      } else if (response.statusCode == 404) {
+        throw Exception('Repository not found.');
+      } else {
+        throw Exception(
+          'Failed to fetch branches: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Error fetching branches: $e');
+    }
+  }
+}
