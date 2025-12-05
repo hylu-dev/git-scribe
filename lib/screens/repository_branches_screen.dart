@@ -3,6 +3,7 @@ import '../services/github_service.dart';
 import '../models/github_branch.dart';
 import '../widgets/app_header.dart';
 import '../widgets/breadcrumbs.dart';
+import '../widgets/branch_card.dart';
 
 /// Screen that displays branches for a repository
 class RepositoryBranchesScreen extends StatefulWidget {
@@ -155,48 +156,8 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       padding: const EdgeInsets.all(8),
       itemBuilder: (context, index) {
         final branch = _branches[index];
-        return _buildBranchCard(branch);
+        return BranchCard(branch: branch);
       },
-    );
-  }
-
-  Widget _buildBranchCard(GitHubBranch branch) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Icon(
-          branch.isProtected ? Icons.lock : Icons.account_tree,
-          color: branch.isProtected
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-        ),
-        title: Text(
-          branch.name,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        subtitle: branch.sha != null
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Text(
-                    'SHA: ${branch.sha!.substring(0, 7)}...',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              )
-            : null,
-        trailing: branch.isProtected
-            ? Chip(
-                label: const Text('Protected'),
-                padding: EdgeInsets.zero,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-              )
-            : null,
-      ),
     );
   }
 }
