@@ -103,6 +103,7 @@ class GitHubService {
 
   /// Fetch all branches for a repository
   /// Returns a list of branches for the given owner and repository
+  /// Includes commit details (message, author, date) for each branch
   Future<List<GitHubBranch>> getRepositoryBranches(
     String owner,
     String repo, {
@@ -114,6 +115,7 @@ class GitHubService {
     }
 
     try {
+      // Fetch branches with commit details
       final response = await http.get(
         Uri.parse('$_baseUrl/repos/$owner/$repo/branches?per_page=$perPage'),
         headers: {
@@ -125,9 +127,46 @@ class GitHubService {
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = json.decode(response.body);
-        return jsonList
-            .map((json) => GitHubBranch.fromJson(json as Map<String, dynamic>))
-            .toList();
+        final branches = <GitHubBranch>[];
+
+        // Fetch commit details for each branch in parallel
+        final branchFutures = jsonList.map((branchJson) async {
+          final branchData = branchJson as Map<String, dynamic>;
+          final commitSha = branchData['commit']?['sha'] as String?;
+
+          // If we have a commit SHA, fetch full commit details
+          if (commitSha != null) {
+            try {
+              final commitResponse = await http.get(
+                Uri.parse('$_baseUrl/repos/$owner/$repo/commits/$commitSha'),
+                headers: {
+                  'Authorization': 'Bearer $token',
+                  'Accept': 'application/vnd.github.v3+json',
+                  'User-Agent': 'GitScribe',
+                },
+              );
+
+              if (commitResponse.statusCode == 200) {
+                final commitData =
+                    jsonDecode(commitResponse.body) as Map<String, dynamic>;
+                // Merge commit details into branch data
+                branchData['commit'] = {
+                  ...branchData['commit'] as Map<String, dynamic>,
+                  'commit': commitData['commit'],
+                };
+              }
+            } catch (_) {
+              // If commit fetch fails, continue with basic branch info
+            }
+          }
+
+          return GitHubBranch.fromJson(branchData);
+        });
+
+        // Wait for all branches to be processed
+        branches.addAll(await Future.wait(branchFutures));
+
+        return branches;
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized. Please sign in again.');
       } else if (response.statusCode == 404) {
