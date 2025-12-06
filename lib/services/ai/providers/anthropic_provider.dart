@@ -152,4 +152,34 @@ class AnthropicProvider implements AIProvider {
       throw Exception('Error calling Anthropic API: $e');
     }
   }
+
+  @override
+  Future<bool> testConnection() async {
+    if (!isConfigured) {
+      return false;
+    }
+
+    try {
+      // Use cheapest model (claude-3-haiku) with minimal tokens for testing
+      final response = await http.post(
+        Uri.parse('$_baseUrl/messages'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey!,
+          'anthropic-version': '2023-06-01',
+        },
+        body: jsonEncode({
+          'model': 'claude-3-haiku-20240307', // Cheapest model
+          'max_tokens': 1, // Minimum tokens
+          'messages': [
+            {'role': 'user', 'content': 'OK'},
+          ],
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
 }

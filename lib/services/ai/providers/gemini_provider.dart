@@ -123,7 +123,7 @@ class GeminiProvider implements AIProvider {
         .join('\n');
 
     try {
-      final modelName = model ?? 'gemini-2.0-flash-exp';
+      final modelName = model ?? 'gemini-2.5-flash';
       final url = Uri.parse(
         '$_baseUrl/models/$modelName:streamGenerateContent?key=$apiKey',
       );
@@ -175,6 +175,28 @@ class GeminiProvider implements AIProvider {
         rethrow;
       }
       throw Exception('Error calling Gemini API: $e');
+    }
+  }
+
+  @override
+  Future<bool> testConnection() async {
+    if (!isConfigured) {
+      return false;
+    }
+
+    try {
+      // Use GET /models endpoint - free and doesn't consume tokens
+      final url = Uri.parse('$_baseUrl/models?key=$apiKey');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        // Check if we got a valid models list
+        return json['models'] != null && json['models'] is List;
+      }
+      return false;
+    } catch (_) {
+      return false;
     }
   }
 }

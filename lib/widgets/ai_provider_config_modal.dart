@@ -22,8 +22,10 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
   final _ollamaBaseUrlController = TextEditingController();
   AIProviderType? _selectedProvider;
   bool _isLoading = false;
+  bool _isTesting = false;
   bool _obscureApiKey = true;
   String? _errorMessage;
+  String? _testResult;
 
   @override
   void initState() {
@@ -61,7 +63,7 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
       case AIProviderType.anthropic:
         return 'Claude models (claude-3-5-sonnet, etc.)';
       case AIProviderType.gemini:
-        return 'Gemini models (gemini-2.0-flash-exp, etc.)';
+        return 'Gemini models (gemini-2.5-flash-exp, etc.)';
       case AIProviderType.ollama:
         return 'Local models (llama3.2, etc.)';
     }
@@ -117,6 +119,62 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
       setState(() {
         _errorMessage = 'Failed to configure provider: $e';
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _testConnection() async {
+    if (_selectedProvider == null) {
+      setState(() {
+        _testResult = 'Please select a provider first';
+      });
+      return;
+    }
+
+    if (_selectedProvider != AIProviderType.ollama) {
+      if (_apiKeyController.text.trim().isEmpty) {
+        setState(() {
+          _testResult = 'Please enter an API key first';
+        });
+        return;
+      }
+    }
+
+    setState(() {
+      _isTesting = true;
+      _testResult = null;
+      _errorMessage = null;
+    });
+
+    try {
+      // Temporarily set the provider to test it
+      _aiService.setProvider(
+        _selectedProvider!,
+        apiKey: _apiKeyController.text.trim().isEmpty
+            ? null
+            : _apiKeyController.text.trim(),
+        baseUrl: _selectedProvider == AIProviderType.ollama
+            ? (_ollamaBaseUrlController.text.trim().isEmpty
+                  ? null
+                  : _ollamaBaseUrlController.text.trim())
+            : null,
+      );
+
+      final isWorking = await _aiService.testProvider();
+
+      setState(() {
+        _isTesting = false;
+        if (isWorking) {
+          _testResult = 'Connection test successful!';
+        } else {
+          _testResult =
+              'Connection test failed. Please check your API key and configuration.';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isTesting = false;
+        _testResult = 'Test failed: $e';
       });
     }
   }
@@ -221,6 +279,42 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
                 },
               ),
             ],
+            // Test result message
+            if (_testResult != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _testResult!.contains('successful')
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Theme.of(context).colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _testResult!.contains('successful')
+                          ? Icons.check_circle
+                          : Icons.error_outline,
+                      color: _testResult!.contains('successful')
+                          ? Colors.green
+                          : Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _testResult!,
+                        style: TextStyle(
+                          color: _testResult!.contains('successful')
+                              ? Colors.green.shade700
+                              : Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             // Error message
             if (_errorMessage != null) ...[
               const SizedBox(height: 16),
@@ -254,11 +348,24 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
       ),
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          onPressed: (_isLoading || _isTesting)
+              ? null
+              : () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
+        OutlinedButton.icon(
+          onPressed: (_isLoading || _isTesting) ? null : _testConnection,
+          icon: _isTesting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.network_check, size: 18),
+          label: Text(_isTesting ? 'Testing...' : 'Test'),
+        ),
         ElevatedButton(
-          onPressed: _isLoading ? null : _saveConfiguration,
+          onPressed: (_isLoading || _isTesting) ? null : _saveConfiguration,
           child: _isLoading
               ? const SizedBox(
                   width: 20,

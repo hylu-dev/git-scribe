@@ -144,4 +144,24 @@ class OllamaProvider implements AIProvider {
       throw Exception('Error calling Ollama API: $e');
     }
   }
+
+  @override
+  Future<bool> testConnection() async {
+    // Use GET /api/tags endpoint - free and doesn't require a model to be loaded
+    try {
+      final response = await http.get(
+        Uri.parse('$_ollamaUrl/api/tags'),
+        headers: {if (apiKey != null) 'Authorization': 'Bearer $apiKey'},
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        // Check if we got a valid models list
+        return json['models'] != null && json['models'] is List;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
 }

@@ -118,4 +118,28 @@ class OpenAIProvider implements AIProvider {
       throw Exception('Error calling OpenAI API: $e');
     }
   }
+
+  @override
+  Future<bool> testConnection() async {
+    if (!isConfigured) {
+      return false;
+    }
+
+    try {
+      // Use GET /models endpoint - free and doesn't consume tokens
+      final response = await http.get(
+        Uri.parse('$_baseUrl/models'),
+        headers: {'Authorization': 'Bearer $apiKey'},
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        // Check if we got a valid models list
+        return json['data'] != null && json['data'] is List;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
 }

@@ -24,5 +24,9 @@ abstract class AIProvider {
     double? temperature,
     int? maxTokens,
   });
+
+  /// Test the provider connection and configuration
+  /// Returns true if the provider is working correctly
+  Future<bool> testConnection();
 }
 

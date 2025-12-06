@@ -121,4 +121,18 @@ class AIService {
       maxTokens: maxTokens,
     );
   }
+
+  /// Test the current provider connection and configuration
+  /// Returns true if the provider is working correctly
+  Future<bool> testProvider() async {
+    if (_provider == null) {
+      throw Exception('No AI provider selected. Call setProvider() first.');
+    }
+
+    if (!_provider!.isConfigured) {
+      return false;
+    }
+
+    return _provider!.testConnection();
+  }
 }
