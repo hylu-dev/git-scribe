@@ -22,6 +22,7 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
   final _ollamaBaseUrlController = TextEditingController();
   AIProviderType? _selectedProvider;
   bool _isLoading = false;
+  bool _obscureApiKey = true;
   String? _errorMessage;
 
   @override
@@ -175,14 +176,20 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
                       border: const OutlineInputBorder(),
                       suffixIcon: _apiKeyController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.visibility_off),
+                              icon: Icon(
+                                _obscureApiKey
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
                               onPressed: () {
-                                // Toggle visibility would require a separate state
+                                setState(() {
+                                  _obscureApiKey = !_obscureApiKey;
+                                });
                               },
                             )
                           : null,
                     ),
-                    obscureText: true,
+                    obscureText: _obscureApiKey,
                     enabled: !_isLoading,
                     onChanged: (_) {
                       setState(() {
