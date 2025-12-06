@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/github_branch.dart';
+import 'branch_actions_sheet.dart';
 
 /// Widget that displays a GitHub branch card
 class BranchCard extends StatelessWidget {
   final GitHubBranch branch;
 
-  const BranchCard({
-    super.key,
-    required this.branch,
-  });
+  const BranchCard({super.key, required this.branch});
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +22,9 @@ class BranchCard extends StatelessWidget {
         ),
         title: Text(
           branch.name,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: branch.sha != null
             ? Column(
@@ -47,8 +45,10 @@ class BranchCard extends StatelessWidget {
                 labelPadding: const EdgeInsets.symmetric(horizontal: 8),
               )
             : null,
+        onTap: () {
+          BranchActionsSheet.show(context, branch);
+        },
       ),
     );
   }
 }
-
