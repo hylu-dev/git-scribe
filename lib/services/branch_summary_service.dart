@@ -165,26 +165,57 @@ class BranchSummaryService {
     return buffer.toString();
   }
 
-  /// Create the AI prompt for branch summary generation
   String _createPrompt(String comparisonText) {
-    return '''Please provide a concise summary of this branch comparison in the following format:
+    return '''
+Produce a branch summary that EXACTLY follows the structure below. Do not add, remove, rename, or reorder sections.
 
-[Start with a 1-2 sentence summary of what this branch does and its main purpose]
+# Title (REQUIRED)
+- The first line MUST be a single markdown H1 title: `# ` + 3–8 descriptive words.
+- This line must contain ONLY the title.
+
+<blank line>
+
+Summary
+- After the title and one blank line, write a plain-text paragraph (1–2 sentences).
+- No headings, lists, or code blocks.
+
+<blank line>
+
+## Key Changes
+- Use the exact heading text `## Key Changes`.
+- For each major change, create a third-level heading: `### <Change Title>`.
+- Under each `###` heading, list sub-points using `- ` bullets.
+- Each bullet should be 1–2 sentences describing what changed.
+- Sub-bullets (optional) use two spaces + `- `.
+
+Example:
+# Add user authentication
+
+Implements user sign-in so players can save progress and access protected endpoints.
 
 ## Key Changes
 
-List the main changes in this branch. For each significant change, provide a simple description of what the change is about. Keep it straightforward and concise - just describe what was changed, not the detailed structure or impact. Group related changes together naturally.
+### Backend Authentication
+- Added login and refresh-token endpoints.
+- Implemented token expiry validation.
+  - Fixed issue where refresh token wasn't persisted.
 
-Focus on:
-- What functionality or features were added, modified, or removed
-- What bugs were fixed
-- What refactoring was done
-- Any other significant changes
+### Client Login UI
+- Added login and signup screens.
+- Improved error display for invalid credentials.
 
-Keep each change description to 1-2 sentences. Be selective and focus on the most important changes.
+Formatting rules (strict):
+1. First line = ONLY an H1 title.
+2. One blank line → plain-text summary paragraph.
+3. One blank line → `## Key Changes`.
+4. Each main change = its own `###` heading.
+5. Bullets under each `###` must use `- `.
+6. Optional sub-bullets use `  - ` (two spaces).
+7. No other headings, sections, metadata, or code fences.
 
 Here is the comparison data:
 
-$comparisonText''';
+$comparisonText
+''';
   }
 }
