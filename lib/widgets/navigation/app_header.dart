@@ -74,10 +74,18 @@ class _AppHeaderState extends State<AppHeader> {
                 ],
               ),
               const SizedBox(width: 16),
+              // Theme selector
+              IconButton(
+                icon: const Icon(Icons.palette),
+                iconSize: 42,
+                onPressed: () => ThemeSelector.show(context),
+                tooltip: 'Select Theme',
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              ),
               // Options (AI Provider Config & Logout)
               IconButton(
                 icon: const Icon(Icons.settings),
-                iconSize: 32,
+                iconSize: 42,
                 onPressed: () async {
                   await OptionsModal.show(context);
                   if (mounted) {
@@ -85,16 +93,6 @@ class _AppHeaderState extends State<AppHeader> {
                   }
                 },
                 tooltip: 'Options',
-                padding: const EdgeInsets.all(12),
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              ),
-              // Theme selector
-              IconButton(
-                icon: const Icon(Icons.palette),
-                iconSize: 32,
-                onPressed: () => ThemeSelector.show(context),
-                tooltip: 'Select Theme',
-                padding: const EdgeInsets.all(12),
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               ),
             ],

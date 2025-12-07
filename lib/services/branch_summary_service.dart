@@ -1,0 +1,161 @@
+import '../models/github_comparison.dart';
+import '../models/ai_message.dart';
+import 'ai_service.dart';
+
+/// Service for generating AI-powered branch summaries
+class BranchSummaryService {
+  final AIService _aiService;
+
+  BranchSummaryService(this._aiService);
+
+  /// Generate an AI summary for a branch comparison
+  Future<String> generateSummary(GitHubComparison comparison) async {
+    if (!_aiService.isConfigured) {
+      throw Exception(
+        'AI service is not configured. Please configure an AI provider in Options.',
+      );
+    }
+
+    // Format the comparison data
+    final comparisonText = _formatComparisonForAI(comparison);
+
+    // Create the prompt
+    final prompt = _createPrompt(comparisonText);
+
+    // Call AI service
+    final response = await _aiService.chatCompletion(
+      messages: [
+        const AIMessage(
+          role: 'system',
+          content:
+              'You are a helpful assistant that summarizes Git branch comparisons. '
+              'Analyze both commit messages and code changes to provide insightful summaries. '
+              'Focus on understanding the intent and impact of changes, not just listing them. '
+              'Provide clear, concise summaries that help developers understand branch changes quickly.',
+        ),
+        AIMessage(role: 'user', content: prompt),
+      ],
+    );
+
+    return response.content;
+  }
+
+  /// Format comparison data for AI processing
+  String _formatComparisonForAI(GitHubComparison comparison) {
+    final buffer = StringBuffer();
+
+    buffer.writeln('Branch Comparison:');
+    buffer.writeln('Base Branch: ${comparison.baseBranch}');
+    buffer.writeln('Head Branch: ${comparison.headBranch}');
+    buffer.writeln('Total Commits: ${comparison.totalCommits}');
+    buffer.writeln('Files Changed: ${comparison.files.length}');
+    buffer.writeln('');
+
+    // Detailed commit information with file changes
+    buffer.writeln('Commits:');
+    for (var i = 0; i < comparison.commits.length; i++) {
+      final commit = comparison.commits[i];
+      buffer.writeln('\n--- Commit ${i + 1} ---');
+      buffer.writeln('Message: ${commit.message}');
+      buffer.writeln('Author: ${commit.author}');
+      if (commit.date != null) {
+        buffer.writeln('Date: ${commit.date}');
+      }
+      buffer.writeln('SHA: ${commit.sha.substring(0, 7)}');
+
+      if (commit.files.isNotEmpty) {
+        buffer.writeln('Files in this commit:');
+        for (final file in commit.files) {
+          buffer.writeln('  - ${file.filename} (${file.status})');
+          buffer.writeln('    +${file.additions} -${file.deletions} lines');
+          // Include patch preview for significant changes (smaller patches only)
+          if (file.patch != null &&
+              file.patch!.isNotEmpty &&
+              file.patch!.length < 1500) {
+            buffer.writeln('    Code preview:');
+            // Include first 30 lines of patch for context
+            final patchLines = file.patch!.split('\n');
+            final previewLines = patchLines.take(30).join('\n');
+            buffer.writeln('    $previewLines');
+            if (patchLines.length > 30) {
+              buffer.writeln('    ... (${patchLines.length - 30} more lines)');
+            }
+          }
+        }
+      }
+    }
+
+    // Overall file changes summary
+    buffer.writeln('\n=== Overall File Changes Summary ===');
+    final filesByType = <String, List<GitHubFileChange>>{};
+    for (final file in comparison.files) {
+      filesByType.putIfAbsent(file.status, () => []).add(file);
+    }
+
+    for (final entry in filesByType.entries) {
+      buffer.writeln(
+        '\n${entry.key.toUpperCase()} files (${entry.value.length}):',
+      );
+      for (final file in entry.value) {
+        buffer.writeln('  - ${file.filename}');
+        buffer.writeln('    +${file.additions} -${file.deletions} lines');
+      }
+    }
+
+    // Include significant code changes (larger files or files with substantial changes)
+    // Only include files that have code changes and are reasonably sized
+    buffer.writeln('\n=== Significant Code Changes ===');
+    final significantFiles = comparison.files
+        .where(
+          (f) =>
+              (f.changes > 30 || f.additions > 20 || f.deletions > 20) &&
+              f.patch != null &&
+              f.patch!.isNotEmpty &&
+              f.patch!.length < 3000,
+        )
+        .take(8)
+        .toList();
+
+    if (significantFiles.isNotEmpty) {
+      for (final file in significantFiles) {
+        buffer.writeln('\nFile: ${file.filename} (${file.status})');
+        buffer.writeln('Changes: +${file.additions} -${file.deletions} lines');
+        if (file.patch != null && file.patch!.isNotEmpty) {
+          // Include patch preview for significant changes
+          final patchLines = file.patch!.split('\n');
+          final previewLines = patchLines.take(60).join('\n');
+          buffer.writeln('Code preview:');
+          buffer.writeln(previewLines);
+          if (patchLines.length > 60) {
+            buffer.writeln('... (${patchLines.length - 60} more lines)');
+          }
+        }
+      }
+    }
+
+    return buffer.toString();
+  }
+
+  /// Create the AI prompt for branch summary generation
+  String _createPrompt(String comparisonText) {
+    return '''Please provide a concise summary of this branch comparison in the following format:
+
+[Start with a 1-2 sentence summary of what this branch does and its main purpose]
+
+## Key Changes
+
+List the main changes in this branch. For each significant change, provide a simple description of what the change is about. Keep it straightforward and concise - just describe what was changed, not the detailed structure or impact. Group related changes together naturally.
+
+Focus on:
+- What functionality or features were added, modified, or removed
+- What bugs were fixed
+- What refactoring was done
+- Any other significant changes
+
+Keep each change description to 1-2 sentences. Be selective and focus on the most important changes.
+
+Here is the comparison data:
+
+$comparisonText''';
+  }
+}
