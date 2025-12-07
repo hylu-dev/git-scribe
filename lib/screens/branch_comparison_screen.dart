@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:intl/intl.dart';
 import '../services/github_service.dart';
 import '../services/ai_service.dart';
 import '../services/branch_summary_service.dart';
@@ -7,6 +8,7 @@ import '../models/github_comparison.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/expansion/commit_expansion_tile.dart';
+import '../widgets/expansion/file_expansion_tile.dart';
 import '../widgets/common/toast.dart';
 import '../widgets/common/refresh_button.dart';
 
@@ -38,6 +40,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   bool _isGeneratingSummary = false;
   String? _aiSummary;
   bool _isSummaryExpanded = false;
+  GitHubCommit? _selectedCommit; // Selected commit in wide mode
 
   @override
   void initState() {
@@ -229,28 +232,13 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
           // Summary header at top
           _buildSummaryHeader(),
           const Divider(height: 1),
-          // Two-column layout: AI Summary on left, Commits on right
+          // Two-column layout: Commits on left, AI Summary and File Changes on right
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left column: AI Summary
-                Flexible(
-                  flex: 1,
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 500),
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: _buildAISummarySection(showDivider: false),
-                      ),
-                    ),
-                  ),
-                ),
-                const VerticalDivider(width: 1),
-                // Right column: Commits
-                Flexible(
-                  flex: 2,
+                // Left column: Commits (can expand wider)
+                Expanded(
                   child: _comparison!.commits.isEmpty
                       ? const Center(child: Text('No commits found'))
                       : ListView.builder(
@@ -262,9 +250,26 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
                                         .length -
                                     1 -
                                     index];
-                            return CommitExpansionTile(commit: commit);
+                            return _buildWideModeCommitItem(commit);
                           },
                         ),
+                ),
+                const VerticalDivider(width: 1),
+                // Right column: AI Summary and File Changes
+                SizedBox(
+                  width: 800,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildAISummarySection(showDivider: false),
+                        if (_selectedCommit != null) ...[
+                          const SizedBox(height: 24),
+                          _buildFileChangesSection(),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -475,5 +480,120 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
         Toast.error(context, e.toString().replaceAll('Exception: ', ''));
       }
     }
+  }
+
+  Widget _buildWideModeCommitItem(GitHubCommit commit) {
+    final isSelected = _selectedCommit?.sha == commit.sha;
+    final date = commit.date != null
+        ? DateFormat('MMM d, y • h:mm a').format(commit.date!)
+        : '';
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _selectedCommit = isSelected ? null : commit;
+        });
+      },
+      child: Container(
+        color: isSelected
+            ? Theme.of(
+                context,
+              ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+            : null,
+        child: ListTile(
+          leading: Icon(
+            Icons.commit,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          title: Text(
+            commit.message.split('\n').first,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    Icons.person,
+                    size: 14,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    commit.author,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(
+                    Icons.access_time,
+                    size: 14,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(date, style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(width: 16),
+                  Text(
+                    commit.sha.substring(0, 7),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                  ),
+                ],
+              ),
+              if (commit.files.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${commit.files.length} file${commit.files.length > 1 ? 's' : ''} changed',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ],
+          ),
+          trailing: isSelected
+              ? Icon(
+                  Icons.check_circle,
+                  color: Theme.of(context).colorScheme.primary,
+                )
+              : const Icon(Icons.chevron_right),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFileChangesSection() {
+    if (_selectedCommit == null || _selectedCommit!.files.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            children: [
+              Icon(Icons.code, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'File Changes',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        ..._selectedCommit!.files.map((file) => FileExpansionTile(file: file)),
+      ],
+    );
   }
 }
