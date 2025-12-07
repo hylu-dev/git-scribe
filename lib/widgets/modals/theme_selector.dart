@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/theme_model.dart';
-import '../main.dart';
+import '../../models/theme_model.dart';
+import '../../main.dart';
+import '../common/toast.dart';
 
 /// Widget for selecting themes via a bottom sheet
 class ThemeSelector {
@@ -11,9 +12,7 @@ class ThemeSelector {
       themeModel = ThemeModelProvider.of(context);
     } catch (e) {
       // If ThemeModelProvider is not available, show an error
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Theme selection is not available')),
-      );
+      Toast.error(context, 'Theme selection is not available');
       return;
     }
 

@@ -33,7 +33,7 @@ class Breadcrumbs extends StatelessWidget {
                   size: 16,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.5),
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
           ],

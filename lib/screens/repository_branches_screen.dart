@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/github_service.dart';
 import '../models/github_branch.dart';
-import '../widgets/app_header.dart';
-import '../widgets/breadcrumbs.dart';
-import '../widgets/branch_card.dart';
+import '../widgets/navigation/app_header.dart';
+import '../widgets/navigation/breadcrumbs.dart';
+import '../widgets/cards/branch_card.dart';
+import '../widgets/common/refresh_button.dart';
 
 /// Screen that displays branches for a repository
 class RepositoryBranchesScreen extends StatefulWidget {
@@ -33,7 +34,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
     _loadBranches();
   }
 
-  Future<void> _loadBranches() async {
+  Future<void> _loadBranches({bool forceRefresh = false}) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -43,6 +44,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       final branches = await _githubService.getRepositoryBranches(
         widget.owner,
         widget.repoName,
+        forceRefresh: forceRefresh,
       );
       setState(() {
         _branches = branches;
@@ -60,6 +62,11 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: RefreshButton(
+        isLoading: _isLoading,
+        onPressed: () => _loadBranches(forceRefresh: true),
+        tooltip: 'Refresh branches',
+      ),
       body: Column(
         children: [
           // Shared header with breadcrumbs
@@ -71,11 +78,6 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
                 route: null, // Current page, not clickable
               ),
             ],
-            trailingAction: IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _isLoading ? null : _loadBranches,
-              tooltip: 'Refresh',
-            ),
           ),
           // Main content
           Expanded(child: _buildBody()),
@@ -117,7 +119,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: _loadBranches,
+              onPressed: () => _loadBranches(forceRefresh: true),
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
             ),
@@ -134,7 +136,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
             Icon(
               Icons.account_tree_outlined,
               size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -151,12 +153,53 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       );
     }
 
+    // Check if we should use wide layout (tablet/desktop)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideLayout = screenWidth >= 800;
+
+    if (isWideLayout) {
+      return _buildWideBranchesList();
+    } else {
+      return _buildMobileBranchesList();
+    }
+  }
+
+  Widget _buildMobileBranchesList() {
     return ListView.builder(
       itemCount: _branches.length,
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 80), // Extra bottom padding for FAB
       itemBuilder: (context, index) {
         final branch = _branches[index];
-        return BranchCard(branch: branch);
+        return BranchCard(
+          branch: branch,
+          owner: widget.owner,
+          repoName: widget.repoName,
+        );
+      },
+    );
+  }
+
+  Widget _buildWideBranchesList() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Calculate columns: 2 for tablets (800-1200px), 3 for larger screens
+    final crossAxisCount = screenWidth >= 1200 ? 3 : 2;
+
+    return GridView.builder(
+      itemCount: _branches.length,
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 80), // Extra bottom padding for FAB
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 2.5,
+      ),
+      itemBuilder: (context, index) {
+        final branch = _branches[index];
+        return BranchCard(
+          branch: branch,
+          owner: widget.owner,
+          repoName: widget.repoName,
+        );
       },
     );
   }

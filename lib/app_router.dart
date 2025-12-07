@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'services/auth_service.dart';
-import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/logged_in_screen.dart';
 import 'screens/repository_branches_screen.dart';
+import 'screens/branch_comparison_screen.dart';
 
 /// Router configuration for the app
 class AppRouter {
@@ -42,6 +43,7 @@ class AppRouter {
       final isLoginRoute = location == '/login' || location == '/';
       final isHomeRoute = location == '/home';
       final isRepoRoute = location.startsWith('/repo/');
+      final isBranchOverviewRoute = location.startsWith('/branch/');
 
       // If user is authenticated and trying to access login, redirect to home
       if (isAuthenticated && isLoginRoute) {
@@ -49,7 +51,8 @@ class AppRouter {
       }
 
       // If user is not authenticated and trying to access protected routes, redirect to login
-      if (!isAuthenticated && (isHomeRoute || isRepoRoute)) {
+      if (!isAuthenticated &&
+          (isHomeRoute || isRepoRoute || isBranchOverviewRoute)) {
         return '/login';
       }
 
@@ -69,7 +72,7 @@ class AppRouter {
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/home',
@@ -88,6 +91,25 @@ class AppRouter {
             );
           }
           return RepositoryBranchesScreen(owner: owner, repoName: name);
+        },
+      ),
+      GoRoute(
+        path: '/branch/:owner/:name/:branch',
+        name: 'branch-overview',
+        builder: (context, state) {
+          final owner = state.pathParameters['owner'] ?? '';
+          final name = state.pathParameters['name'] ?? '';
+          final branch = state.pathParameters['branch'] ?? '';
+          if (owner.isEmpty || name.isEmpty || branch.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('Invalid branch path')),
+            );
+          }
+          return BranchOverviewScreen(
+            owner: owner,
+            repoName: name,
+            branchName: branch,
+          );
         },
       ),
     ],
