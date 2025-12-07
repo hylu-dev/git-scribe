@@ -11,7 +11,6 @@ import '../services/github_service.dart';
 import '../models/github_comparison.dart';
 import '../widgets/app_header.dart';
 import '../widgets/breadcrumbs.dart';
-import '../widgets/commit_card.dart';
 import '../main.dart';
 
 /// Screen that displays branch comparison results
@@ -37,7 +36,6 @@ class _BranchComparisonScreenState extends State<BranchComparisonScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   String? _baseBranch;
-  int? _selectedCommitIndex;
 
   @override
   void initState() {
@@ -157,113 +155,56 @@ class _BranchComparisonScreenState extends State<BranchComparisonScreen> {
       return const Center(child: Text('No comparison data available'));
     }
 
-    return Row(
+    return ListView(
       children: [
-        // Commit list
-        Expanded(
-          flex: 2,
+        // Summary header
+        Container(
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Summary header
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Comparison Summary',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Base: $_baseBranch → Head: ${widget.branchName}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 8,
-                      children: [
-                        _buildSummaryChip(
-                          'Status',
-                          _comparison!.status.toUpperCase(),
-                        ),
-                        _buildSummaryChip(
-                          'Commits',
-                          '${_comparison!.totalCommits}',
-                        ),
-                        _buildSummaryChip('Ahead', '${_comparison!.aheadBy}'),
-                        _buildSummaryChip('Behind', '${_comparison!.behindBy}'),
-                        _buildSummaryChip(
-                          'Files',
-                          '${_comparison!.files.length}',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              Text(
+                'Comparison Summary',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const Divider(height: 1),
-              // Commits list
-              Expanded(
-                child: _comparison!.commits.isEmpty
-                    ? const Center(child: Text('No commits found'))
-                    : ListView.builder(
-                        itemCount: _comparison!.commits.length,
-                        padding: const EdgeInsets.all(8),
-                        itemBuilder: (context, index) {
-                          final commit = _comparison!.commits[index];
-                          return CommitCard(
-                            commit: commit,
-                            isSelected: _selectedCommitIndex == index,
-                            onTap: () {
-                              setState(() {
-                                _selectedCommitIndex =
-                                    _selectedCommitIndex == index
-                                    ? null
-                                    : index;
-                              });
-                            },
-                          );
-                        },
-                      ),
+              const SizedBox(height: 8),
+              Text(
+                'Base: $_baseBranch → Head: ${widget.branchName}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                children: [
+                  _buildSummaryChip(
+                    'Status',
+                    _comparison!.status.toUpperCase(),
+                  ),
+                  _buildSummaryChip('Commits', '${_comparison!.totalCommits}'),
+                  _buildSummaryChip('Ahead', '${_comparison!.aheadBy}'),
+                  _buildSummaryChip('Behind', '${_comparison!.behindBy}'),
+                  _buildSummaryChip('Files', '${_comparison!.files.length}'),
+                ],
               ),
             ],
           ),
         ),
-        const VerticalDivider(width: 1),
-        // Diff view
-        Expanded(
-          flex: 3,
-          child: _selectedCommitIndex != null
-              ? _buildDiffView(_comparison!.commits[_selectedCommitIndex!])
-              : Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.code,
-                        size: 64,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.3),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Select a commit to view code changes',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-        ),
+        const Divider(height: 1),
+        // Commits list with nested files
+        if (_comparison!.commits.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: Text('No commits found')),
+          )
+        else
+          ..._comparison!.commits.asMap().entries.map((entry) {
+            final index = entry.key;
+            final commit = entry.value;
+            return _buildCommitExpansionTile(context, commit, index);
+          }),
       ],
     );
   }
@@ -277,179 +218,151 @@ class _BranchComparisonScreenState extends State<BranchComparisonScreen> {
     );
   }
 
-  Widget _buildDiffView(GitHubCommit commit) {
-    if (commit.files.isEmpty) {
-      return const Center(child: Text('No file changes in this commit'));
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Commit header
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            border: Border(
-              bottom: BorderSide(
-                color: Theme.of(context).dividerColor,
-                width: 1,
-              ),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildCommitExpansionTile(
+    BuildContext context,
+    GitHubCommit commit,
+    int index,
+  ) {
+    return ExpansionTile(
+      leading: Icon(Icons.commit, color: Theme.of(context).colorScheme.primary),
+      title: Text(
+        commit.message.split('\n').first,
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 4),
+          Row(
             children: [
+              Icon(
+                Icons.person,
+                size: 14,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
+              const SizedBox(width: 4),
+              Text(commit.author, style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(width: 16),
+              Icon(
+                Icons.access_time,
+                size: 14,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
+              const SizedBox(width: 4),
               Text(
-                commit.message.split('\n').first,
+                _formatDate(commit.date),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(width: 16),
+              Text(
+                commit.sha.substring(0, 7),
                 style: Theme.of(
                   context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.person,
-                    size: 16,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    commit.author,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.access_time,
-                    size: 16,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatDate(commit.date),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    commit.sha.substring(0, 7),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
-                  ),
-                ],
+                ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
               ),
             ],
           ),
-        ),
-        // Files and diffs
-        Expanded(
-          child: ListView.builder(
-            itemCount: commit.files.length,
-            padding: const EdgeInsets.all(8),
-            itemBuilder: (context, index) {
-              final file = commit.files[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ExpansionTile(
-                  leading: Icon(
-                    _getFileStatusIcon(file.status),
-                    color: _getFileStatusColor(file.status),
-                  ),
-                  title: Text(
-                    file.filename,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Row(
-                    children: [
-                      if (file.additions > 0)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.add,
-                              size: 14,
-                              color: Colors.green,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '+${file.additions}',
-                              style: const TextStyle(color: Colors.green),
-                            ),
-                          ],
-                        ),
-                      if (file.additions > 0 && file.deletions > 0)
-                        const SizedBox(width: 16),
-                      if (file.deletions > 0)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.remove,
-                              size: 14,
-                              color: Colors.red,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '-${file.deletions}',
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ],
-                        ),
-                      const SizedBox(width: 16),
-                      Text(
-                        file.status.toUpperCase(),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  children: [
-                    if (file.patch != null && file.patch!.isNotEmpty)
-                      Container(
-                        width: double.infinity,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        child: SingleChildScrollView(
-                          child: HighlightView(
-                            file.patch!,
-                            language: _detectLanguage(file.filename),
-                            theme: _getHighlightTheme(context),
-                            padding: const EdgeInsets.all(16),
-                            textStyle: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      )
-                    else if (file.status != 'removed')
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Code changes not available (file may be too large)',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                        ),
-                      ),
-                  ],
+          if (commit.files.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${commit.files.length} file${commit.files.length > 1 ? 's' : ''} changed',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ],
+      ),
+      children: [
+        if (commit.files.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('No file changes in this commit'),
+          )
+        else
+          ...commit.files.map((file) => _buildFileExpansionTile(context, file)),
+      ],
+    );
+  }
+
+  Widget _buildFileExpansionTile(BuildContext context, GitHubFileChange file) {
+    return ExpansionTile(
+      leading: Icon(
+        _getFileStatusIcon(file.status),
+        color: _getFileStatusColor(file.status),
+        size: 20,
+      ),
+      title: Text(
+        file.filename,
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Row(
+        children: [
+          if (file.additions > 0)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.add, size: 14, color: Colors.green),
+                const SizedBox(width: 4),
+                Text(
+                  '+${file.additions}',
+                  style: const TextStyle(color: Colors.green),
                 ),
-              );
-            },
+              ],
+            ),
+          if (file.additions > 0 && file.deletions > 0)
+            const SizedBox(width: 16),
+          if (file.deletions > 0)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.remove, size: 14, color: Colors.red),
+                const SizedBox(width: 4),
+                Text(
+                  '-${file.deletions}',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ],
+            ),
+          const SizedBox(width: 16),
+          Text(
+            file.status.toUpperCase(),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
           ),
-        ),
+        ],
+      ),
+      children: [
+        if (file.patch != null && file.patch!.isNotEmpty)
+          Container(
+            width: double.infinity,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: SingleChildScrollView(
+              child: HighlightView(
+                file.patch!,
+                language: _detectLanguage(file.filename),
+                theme: _getHighlightTheme(context),
+                padding: const EdgeInsets.all(16),
+                textStyle: const TextStyle(
+                  fontFamily: 'Fira Code',
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          )
+        else if (file.status != 'removed')
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'Code changes not available (file may be too large)',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+          ),
       ],
     );
   }
