@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../widgets/common/github_login_button.dart';
+import '../widgets/common/toast.dart';
 
 /// Home screen that shows login button when not authenticated
 class HomeScreen extends StatelessWidget {
@@ -23,12 +24,7 @@ class HomeScreen extends StatelessWidget {
                   await authService.signInWithGitHub();
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
+                    Toast.error(context, 'Error: $e');
                   }
                 }
               },

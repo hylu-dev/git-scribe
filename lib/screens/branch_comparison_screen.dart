@@ -7,6 +7,7 @@ import '../models/github_comparison.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/expansion/commit_expansion_tile.dart';
+import '../widgets/common/toast.dart';
 
 /// Screen that displays branch overview with commits and file changes
 class BranchOverviewScreen extends StatefulWidget {
@@ -35,7 +36,6 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   String? _baseBranch;
   bool _isGeneratingSummary = false;
   String? _aiSummary;
-  String? _summaryError;
 
   @override
   void initState() {
@@ -204,23 +204,19 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
         ),
         const Divider(height: 1),
         // AI Summary section
-        if (_aiSummary != null || _summaryError != null) ...[
+        if (_aiSummary != null) ...[
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _summaryError != null
-                  ? Theme.of(context).colorScheme.errorContainer
-                  : Theme.of(context).colorScheme.surfaceContainerHighest,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
-              border: _summaryError == null
-                  ? Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outline.withValues(alpha: 0.2),
-                      width: 1,
-                    )
-                  : null,
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,21 +224,15 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
                 Row(
                   children: [
                     Icon(
-                      _summaryError != null
-                          ? Icons.error_outline
-                          : Icons.auto_awesome,
-                      color: _summaryError != null
-                          ? Theme.of(context).colorScheme.onErrorContainer
-                          : Theme.of(context).colorScheme.onSurface,
+                      Icons.auto_awesome,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'AI Summary',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: _summaryError != null
-                            ? Theme.of(context).colorScheme.onErrorContainer
-                            : Theme.of(context).colorScheme.onPrimaryContainer,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const Spacer(),
@@ -251,86 +241,75 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
                       onPressed: () {
                         setState(() {
                           _aiSummary = null;
-                          _summaryError = null;
                         });
                       },
-                      color: _summaryError != null
-                          ? Theme.of(context).colorScheme.onErrorContainer
-                          : Theme.of(context).colorScheme.onSurface,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                if (_summaryError != null)
-                  Text(
-                    _summaryError!,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onErrorContainer,
+                MarkdownBody(
+                  data: _aiSummary!,
+                  styleSheet: MarkdownStyleSheet(
+                    p: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
-                  )
-                else if (_aiSummary != null)
-                  MarkdownBody(
-                    data: _aiSummary!,
-                    styleSheet: MarkdownStyleSheet(
-                      p: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      h1: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      h2: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      h3: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      strong: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      em: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontStyle: FontStyle.italic,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      code: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontFamily: 'monospace',
-                        color: Theme.of(context).colorScheme.onSurface,
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest
-                            .withValues(alpha: 0.5),
-                      ),
-                      codeblockDecoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest
-                            .withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      codeblockPadding: const EdgeInsets.all(12),
-                      listBullet: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                      blockquote: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontStyle: FontStyle.italic,
-                          ),
-                      blockquoteDecoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 4,
-                          ),
+                    h1: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    h2: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    h3: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    strong: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    em: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    code: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontFamily: 'monospace',
+                      color: Theme.of(context).colorScheme.onSurface,
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                    ),
+                    codeblockDecoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    codeblockPadding: const EdgeInsets.all(12),
+                    listBullet: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                    blockquote: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontStyle: FontStyle.italic,
+                        ),
+                    blockquoteDecoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 4,
                         ),
                       ),
-                      blockquotePadding: const EdgeInsets.only(left: 16),
                     ),
+                    blockquotePadding: const EdgeInsets.only(left: 16),
                   ),
+                ),
               ],
             ),
           ),
@@ -365,20 +344,23 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
     setState(() {
       _isGeneratingSummary = true;
       _aiSummary = null;
-      _summaryError = null;
     });
 
     try {
       final summary = await _branchSummaryService.generateSummary(_comparison!);
-      setState(() {
-        _aiSummary = summary;
-        _isGeneratingSummary = false;
-      });
+      if (mounted) {
+        setState(() {
+          _aiSummary = summary;
+          _isGeneratingSummary = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _summaryError = e.toString();
-        _isGeneratingSummary = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isGeneratingSummary = false;
+        });
+        Toast.error(context, e.toString().replaceAll('Exception: ', ''));
+      }
     }
   }
 }

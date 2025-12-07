@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
+import '../common/toast.dart';
 
 /// Modal dialog for app options including AI provider config and logout
 class OptionsModal extends StatefulWidget {
@@ -108,13 +109,9 @@ class _OptionsModalState extends State<OptionsModal> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${_getProviderName(_selectedProvider!)} configured successfully',
-            ),
-            backgroundColor: Colors.green,
-          ),
+        Toast.success(
+          context,
+          '${_getProviderName(_selectedProvider!)} configured successfully',
         );
       }
     } catch (e) {
