@@ -9,8 +9,10 @@ import 'app_router.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file
-  await dotenv.load(fileName: '.env');
+  // Load environment variables from .env file only if compile-time vars are not available
+  if (Env.needsDotenv) {
+    await dotenv.load(fileName: '.env');
+  }
 
   // Initialize Supabase
   await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
