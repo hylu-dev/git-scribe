@@ -8,6 +8,7 @@ import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/expansion/commit_expansion_tile.dart';
 import '../widgets/common/toast.dart';
+import '../widgets/common/refresh_button.dart';
 
 /// Screen that displays branch overview with commits and file changes
 class BranchOverviewScreen extends StatefulWidget {
@@ -106,6 +107,11 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: RefreshButton(
+        isLoading: _isLoading,
+        onPressed: () => _loadComparison(forceRefresh: true),
+        tooltip: 'Refresh comparison',
+      ),
       body: Column(
         children: [
           AppHeader(
@@ -171,6 +177,12 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
     }
 
     return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        0,
+        0,
+        0,
+        80,
+      ), // Extra bottom padding for FAB
       children: [
         // Summary header
         Container(

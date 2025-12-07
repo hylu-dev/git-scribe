@@ -4,6 +4,7 @@ import '../models/github_branch.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/cards/branch_card.dart';
+import '../widgets/common/refresh_button.dart';
 
 /// Screen that displays branches for a repository
 class RepositoryBranchesScreen extends StatefulWidget {
@@ -61,19 +62,9 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : () => _loadBranches(forceRefresh: true),
-        icon: _isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : const Icon(Icons.refresh),
-        label: Text(_isLoading ? 'Loading...' : 'Refresh'),
+      floatingActionButton: RefreshButton(
+        isLoading: _isLoading,
+        onPressed: () => _loadBranches(forceRefresh: true),
         tooltip: 'Refresh branches',
       ),
       body: Column(

@@ -5,6 +5,7 @@ import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/cards/repository_card.dart';
 import '../widgets/common/lazy_load_list_view.dart';
+import '../widgets/common/refresh_button.dart';
 
 /// Screen shown after successful authentication
 class LoggedInScreen extends StatefulWidget {
@@ -124,19 +125,9 @@ class _LoggedInScreenState extends State<LoggedInScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : () => _loadRepositories(forceRefresh: true),
-        icon: _isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : const Icon(Icons.refresh),
-        label: Text(_isLoading ? 'Loading...' : 'Refresh'),
+      floatingActionButton: RefreshButton(
+        isLoading: _isLoading,
+        onPressed: () => _loadRepositories(forceRefresh: true),
         tooltip: 'Refresh repositories',
       ),
       body: Column(
