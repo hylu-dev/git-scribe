@@ -1,15 +1,31 @@
 import '../models/github_comparison.dart';
 import '../models/ai_message.dart';
 import 'ai_service.dart';
+import 'cache_service.dart';
 
 /// Service for generating AI-powered branch summaries
 class BranchSummaryService {
   final AIService _aiService;
+  final CacheService _cache = CacheService();
 
   BranchSummaryService(this._aiService);
 
   /// Generate an AI summary for a branch comparison
-  Future<String> generateSummary(GitHubComparison comparison) async {
+  /// If a cached summary exists, it will be returned immediately.
+  /// Set forceRefresh to true to always generate a new summary.
+  Future<String> generateSummary(
+    GitHubComparison comparison, {
+    bool forceRefresh = false,
+  }) async {
+    // Check cache first (unless forcing refresh)
+    if (!forceRefresh) {
+      final cacheKey = _getSummaryCacheKey(comparison);
+      final cached = _cache.get<String>(cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+    }
+
     if (!_aiService.isConfigured) {
       throw Exception(
         'AI service is not configured. Please configure an AI provider in Options.',
@@ -37,7 +53,20 @@ class BranchSummaryService {
       ],
     );
 
-    return response.content;
+    final summary = response.content;
+
+    // Cache the summary (longer TTL since summaries don't change unless branch changes)
+    final cacheKey = _getSummaryCacheKey(comparison);
+    _cache.set(cacheKey, summary, ttl: const Duration(hours: 1));
+
+    return summary;
+  }
+
+  /// Generate a cache key for a branch comparison summary
+  String _getSummaryCacheKey(GitHubComparison comparison) {
+    // Use base branch, head branch, and total commits as key
+    // This ensures cache is invalidated if branch changes
+    return 'summary:${comparison.baseBranch}:${comparison.headBranch}:${comparison.totalCommits}';
   }
 
   /// Format comparison data for AI processing

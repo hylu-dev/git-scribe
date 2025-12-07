@@ -4,10 +4,12 @@ import '../models/github_repository.dart';
 import '../models/github_branch.dart';
 import '../models/github_comparison.dart';
 import 'supabase_service.dart';
+import 'cache_service.dart';
 
 /// Service for interacting with GitHub API
 class GitHubService {
   static const String _baseUrl = 'https://api.github.com';
+  final CacheService _cache = CacheService();
 
   /// Get the GitHub access token from Supabase session
   String? _getAccessToken() {
@@ -20,12 +22,23 @@ class GitHubService {
   /// Fetch repositories for the authenticated user (paginated)
   /// Returns a list of repositories sorted by most recently updated.
   /// Uses `visibility=all` to fetch all repositories the user can see.
+  /// Results are cached for 5 minutes.
   Future<List<GitHubRepository>> getUserRepositories({
     String? sort = 'updated',
     String? direction = 'desc',
     int page = 1,
     int perPage = 10,
+    bool forceRefresh = false,
   }) async {
+    // Check cache first (only for first page)
+    if (page == 1 && !forceRefresh) {
+      final cacheKey = 'repos:$sort:$direction:$page:$perPage';
+      final cached = _cache.get<List<GitHubRepository>>(cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+    }
+
     final token = _getAccessToken();
     if (token == null) {
       throw Exception('No GitHub access token found. Please sign in again.');
@@ -45,11 +58,19 @@ class GitHubService {
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonList = json.decode(response.body);
-        return jsonList
+        final repos = jsonList
             .map(
               (json) => GitHubRepository.fromJson(json as Map<String, dynamic>),
             )
             .toList();
+
+        // Cache first page only
+        if (page == 1) {
+          final cacheKey = 'repos:$sort:$direction:$page:$perPage';
+          _cache.set(cacheKey, repos, ttl: const Duration(minutes: 5));
+        }
+
+        return repos;
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized. Please sign in again.');
       } else {
@@ -105,11 +126,22 @@ class GitHubService {
   /// Fetch all branches for a repository
   /// Returns a list of branches for the given owner and repository
   /// Includes commit details (message, author, date) for each branch
+  /// Results are cached for 5 minutes.
   Future<List<GitHubBranch>> getRepositoryBranches(
     String owner,
     String repo, {
     int perPage = 100,
+    bool forceRefresh = false,
   }) async {
+    // Check cache first
+    if (!forceRefresh) {
+      final cacheKey = 'branches:$owner:$repo:$perPage';
+      final cached = _cache.get<List<GitHubBranch>>(cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+    }
+
     final token = _getAccessToken();
     if (token == null) {
       throw Exception('No GitHub access token found. Please sign in again.');
@@ -167,6 +199,10 @@ class GitHubService {
         // Wait for all branches to be processed
         branches.addAll(await Future.wait(branchFutures));
 
+        // Cache the results
+        final cacheKey = 'branches:$owner:$repo:$perPage';
+        _cache.set(cacheKey, branches, ttl: const Duration(minutes: 5));
+
         return branches;
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized. Please sign in again.');
@@ -187,12 +223,23 @@ class GitHubService {
 
   /// Compare two branches
   /// Compares headBranch against baseBranch (typically main/master)
+  /// Results are cached for 5 minutes.
   Future<GitHubComparison> compareBranches(
     String owner,
     String repo,
     String baseBranch,
-    String headBranch,
-  ) async {
+    String headBranch, {
+    bool forceRefresh = false,
+  }) async {
+    // Check cache first
+    if (!forceRefresh) {
+      final cacheKey = 'comparison:$owner:$repo:$baseBranch:$headBranch';
+      final cached = _cache.get<GitHubComparison>(cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+    }
+
     final token = _getAccessToken();
     if (token == null) {
       throw Exception('No GitHub access token found. Please sign in again.');
@@ -252,7 +299,13 @@ class GitHubService {
         final updatedCommits = await Future.wait(commitFutures);
         json['commits'] = updatedCommits;
 
-        return GitHubComparison.fromJson(json);
+        final comparison = GitHubComparison.fromJson(json);
+
+        // Cache the results
+        final cacheKey = 'comparison:$owner:$repo:$baseBranch:$headBranch';
+        _cache.set(cacheKey, comparison, ttl: const Duration(minutes: 5));
+
+        return comparison;
       } else if (response.statusCode == 401) {
         throw Exception('Unauthorized. Please sign in again.');
       } else if (response.statusCode == 404) {

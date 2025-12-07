@@ -50,20 +50,25 @@ class _LoggedInScreenState extends State<LoggedInScreen>
     super.dispose();
   }
 
-  Future<void> _loadRepositories() async {
+  Future<void> _loadRepositories({bool forceRefresh = false}) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
       _showItems = false;
       _hasMore = true;
-      _repositories = [];
+      if (forceRefresh) {
+        _repositories = [];
+      }
     });
-    _animationController.reset();
+    if (forceRefresh) {
+      _animationController.reset();
+    }
 
     try {
       final repos = await _githubService.getUserRepositories(
         page: 1,
         perPage: 10,
+        forceRefresh: forceRefresh,
       );
       setState(() {
         _repositories = repos;
@@ -120,7 +125,7 @@ class _LoggedInScreenState extends State<LoggedInScreen>
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : _loadRepositories,
+        onPressed: _isLoading ? null : () => _loadRepositories(forceRefresh: true),
         icon: _isLoading
             ? const SizedBox(
                 width: 20,

@@ -33,7 +33,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
     _loadBranches();
   }
 
-  Future<void> _loadBranches() async {
+  Future<void> _loadBranches({bool forceRefresh = false}) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -43,6 +43,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       final branches = await _githubService.getRepositoryBranches(
         widget.owner,
         widget.repoName,
+        forceRefresh: forceRefresh,
       );
       setState(() {
         _branches = branches;
@@ -60,6 +61,21 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _isLoading ? null : () => _loadBranches(forceRefresh: true),
+        icon: _isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Icon(Icons.refresh),
+        label: Text(_isLoading ? 'Loading...' : 'Refresh'),
+        tooltip: 'Refresh branches',
+      ),
       body: Column(
         children: [
           // Shared header with breadcrumbs
@@ -112,7 +128,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: _loadBranches,
+              onPressed: () => _loadBranches(forceRefresh: true),
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
             ),
@@ -148,7 +164,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
 
     return ListView.builder(
       itemCount: _branches.length,
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 80), // Extra bottom padding for FAB
       itemBuilder: (context, index) {
         final branch = _branches[index];
         return BranchCard(

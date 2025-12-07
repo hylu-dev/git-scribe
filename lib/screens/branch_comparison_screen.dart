@@ -44,7 +44,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
     _loadComparison();
   }
 
-  Future<void> _loadComparison() async {
+  Future<void> _loadComparison({bool forceRefresh = false}) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -58,23 +58,47 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
       );
       _baseBranch = defaultBranch;
 
-      // Compare branches
+      // Compare branches (uses cache if available)
       final comparison = await _githubService.compareBranches(
         widget.owner,
         widget.repoName,
         defaultBranch,
         widget.branchName,
+        forceRefresh: forceRefresh,
       );
 
       setState(() {
         _comparison = comparison;
         _isLoading = false;
       });
+
+      // Load cached summary if available
+      _loadCachedSummary();
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadCachedSummary() async {
+    if (_comparison == null) return;
+
+    try {
+      // Try to get cached summary (won't generate new one)
+      final cachedSummary = await _branchSummaryService.generateSummary(
+        _comparison!,
+        forceRefresh: false,
+      );
+      if (mounted) {
+        setState(() {
+          _aiSummary = cachedSummary;
+        });
+      }
+    } catch (_) {
+      // No cached summary available, that's fine
+      // User can click generate to create one
     }
   }
 
@@ -347,7 +371,11 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
     });
 
     try {
-      final summary = await _branchSummaryService.generateSummary(_comparison!);
+      // Always generate a new summary when button is clicked
+      final summary = await _branchSummaryService.generateSummary(
+        _comparison!,
+        forceRefresh: true,
+      );
       if (mounted) {
         setState(() {
           _aiSummary = summary;
