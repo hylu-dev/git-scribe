@@ -61,7 +61,7 @@ class CommitCard extends StatelessWidget {
                     size: 14,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -74,7 +74,7 @@ class CommitCard extends StatelessWidget {
                     size: 14,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.6),
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                   const SizedBox(width: 4),
                   Text(

@@ -39,7 +39,7 @@ class CommitExpansionTile extends StatelessWidget {
               Icon(
                 Icons.person,
                 size: 14,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 4),
               Text(
@@ -50,7 +50,7 @@ class CommitExpansionTile extends StatelessWidget {
               Icon(
                 Icons.access_time,
                 size: 14,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 4),
               Text(

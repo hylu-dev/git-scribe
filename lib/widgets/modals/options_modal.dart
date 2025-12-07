@@ -224,6 +224,7 @@ class _OptionsModalState extends State<OptionsModal> {
             ),
             const SizedBox(height: 12),
             // Provider selection
+            // ignore: deprecated_member_use
             ...AIProviderType.values.map((provider) {
               return RadioListTile<AIProviderType>(
                 title: Text(_getProviderName(provider)),
@@ -232,7 +233,9 @@ class _OptionsModalState extends State<OptionsModal> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 value: provider,
+                // ignore: deprecated_member_use
                 groupValue: _selectedProvider,
+                // ignore: deprecated_member_use
                 onChanged: (value) {
                   setState(() {
                     _selectedProvider = value;

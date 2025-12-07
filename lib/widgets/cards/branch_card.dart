@@ -73,7 +73,7 @@ class BranchCard extends StatelessWidget {
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.7),
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -104,7 +104,7 @@ class BranchCard extends StatelessWidget {
                         size: 16,
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                       const SizedBox(width: 6),
                       Expanded(
@@ -132,7 +132,7 @@ class BranchCard extends StatelessWidget {
                             size: 14,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.6),
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -151,7 +151,7 @@ class BranchCard extends StatelessWidget {
                             size: 14,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.6),
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -169,7 +169,7 @@ class BranchCard extends StatelessWidget {
                             size: 14,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.6),
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 4),
                           Text(

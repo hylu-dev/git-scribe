@@ -7,11 +7,7 @@ class RepositoryCard extends StatelessWidget {
   final GitHubRepository repo;
   final VoidCallback? onTap;
 
-  const RepositoryCard({
-    super.key,
-    required this.repo,
-    this.onTap,
-  });
+  const RepositoryCard({super.key, required this.repo, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +19,13 @@ class RepositoryCard extends StatelessWidget {
           repo.isPrivate ? Icons.lock : Icons.code,
           color: repo.isPrivate
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
         ),
         title: Text(
           repo.fullName,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,7 +58,9 @@ class RepositoryCard extends StatelessWidget {
                 Icon(
                   Icons.star_border,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -73,7 +71,9 @@ class RepositoryCard extends StatelessWidget {
                 Icon(
                   Icons.call_split,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -86,9 +86,10 @@ class RepositoryCard extends StatelessWidget {
         ),
         trailing: Icon(
           Icons.chevron_right,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
         ),
-        onTap: onTap ??
+        onTap:
+            onTap ??
             () {
               // Navigate to repository branches screen
               final parts = repo.fullName.split('/');
@@ -121,4 +122,3 @@ class RepositoryCard extends StatelessWidget {
     return colors[language] ?? Colors.grey;
   }
 }
-

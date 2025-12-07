@@ -129,7 +129,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
             Icon(
               Icons.account_tree_outlined,
               size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
