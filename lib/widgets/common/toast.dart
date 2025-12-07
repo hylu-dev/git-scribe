@@ -6,7 +6,9 @@ class Toast {
   /// Show a success toast (green background, simple text)
   static void success(BuildContext context, String message) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger.hideCurrentSnackBar();
+    scaffoldMessenger.showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
@@ -14,7 +16,9 @@ class Toast {
   /// Show an error toast (red background, simple text)
   static void error(BuildContext context, String message) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger.hideCurrentSnackBar();
+    scaffoldMessenger.showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
@@ -23,7 +27,9 @@ class Toast {
   static void info(BuildContext context, String message) {
     if (!context.mounted) return;
     final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger.hideCurrentSnackBar();
+    scaffoldMessenger.showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
