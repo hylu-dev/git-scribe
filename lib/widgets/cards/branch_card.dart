@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
-import '../models/github_branch.dart';
+import '../../models/github_branch.dart';
 
 /// Widget that displays a GitHub branch card
 class BranchCard extends StatelessWidget {
@@ -49,7 +49,7 @@ class BranchCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           context.goNamed(
-            'branch-comparison',
+            'branch-overview',
             pathParameters: {
               'owner': owner,
               'name': repoName,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/ai_service.dart';
+import '../../services/ai_service.dart';
 
 /// Modal dialog for configuring AI provider and API key
 class AIProviderConfigModal extends StatefulWidget {

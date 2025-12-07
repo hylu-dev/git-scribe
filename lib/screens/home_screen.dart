@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../widgets/github_login_button.dart';
+import '../widgets/common/github_login_button.dart';
 
 /// Home screen that shows login button when not authenticated
 class HomeScreen extends StatelessWidget {

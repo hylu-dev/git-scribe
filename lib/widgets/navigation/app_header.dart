@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../services/ai_service.dart';
-import '../widgets/theme_selector.dart';
-import '../widgets/breadcrumbs.dart';
-import '../widgets/ai_provider_config_modal.dart';
+import '../../services/auth_service.dart';
+import '../../services/ai_service.dart';
+import '../modals/theme_selector.dart';
+import 'breadcrumbs.dart';
+import '../modals/ai_provider_config_modal.dart';
 
 /// Shared header component for authenticated screens
 class AppHeader extends StatefulWidget {

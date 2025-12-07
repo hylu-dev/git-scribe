@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/github_service.dart';
 import '../models/github_branch.dart';
-import '../widgets/app_header.dart';
-import '../widgets/breadcrumbs.dart';
-import '../widgets/branch_card.dart';
+import '../widgets/navigation/app_header.dart';
+import '../widgets/navigation/breadcrumbs.dart';
+import '../widgets/cards/branch_card.dart';
 
 /// Screen that displays branches for a repository
 class RepositoryBranchesScreen extends StatefulWidget {

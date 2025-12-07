@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../models/github_branch.dart';
+import '../../models/github_branch.dart';
 
 /// Bottom sheet for branch actions
 class BranchActionsSheet {

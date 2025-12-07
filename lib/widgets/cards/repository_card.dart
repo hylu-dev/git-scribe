@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../models/github_repository.dart';
+import '../../models/github_repository.dart';
 
 /// Widget that displays a GitHub repository card
 class RepositoryCard extends StatelessWidget {

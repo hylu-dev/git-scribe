@@ -43,7 +43,7 @@ class AppRouter {
       final isLoginRoute = location == '/login' || location == '/';
       final isHomeRoute = location == '/home';
       final isRepoRoute = location.startsWith('/repo/');
-      final isCompareRoute = location.startsWith('/compare/');
+      final isBranchOverviewRoute = location.startsWith('/branch/');
 
       // If user is authenticated and trying to access login, redirect to home
       if (isAuthenticated && isLoginRoute) {
@@ -51,7 +51,8 @@ class AppRouter {
       }
 
       // If user is not authenticated and trying to access protected routes, redirect to login
-      if (!isAuthenticated && (isHomeRoute || isRepoRoute || isCompareRoute)) {
+      if (!isAuthenticated &&
+          (isHomeRoute || isRepoRoute || isBranchOverviewRoute)) {
         return '/login';
       }
 
@@ -93,18 +94,18 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: '/compare/:owner/:name/:branch',
-        name: 'branch-comparison',
+        path: '/branch/:owner/:name/:branch',
+        name: 'branch-overview',
         builder: (context, state) {
           final owner = state.pathParameters['owner'] ?? '';
           final name = state.pathParameters['name'] ?? '';
           final branch = state.pathParameters['branch'] ?? '';
           if (owner.isEmpty || name.isEmpty || branch.isEmpty) {
             return const Scaffold(
-              body: Center(child: Text('Invalid comparison path')),
+              body: Center(child: Text('Invalid branch path')),
             );
           }
-          return BranchComparisonScreen(
+          return BranchOverviewScreen(
             owner: owner,
             repoName: name,
             branchName: branch,

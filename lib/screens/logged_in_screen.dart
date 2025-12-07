@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/github_service.dart';
 import '../models/github_repository.dart';
-import '../widgets/app_header.dart';
-import '../widgets/breadcrumbs.dart';
-import '../widgets/repository_card.dart';
-import '../widgets/lazy_load_list_view.dart';
+import '../widgets/navigation/app_header.dart';
+import '../widgets/navigation/breadcrumbs.dart';
+import '../widgets/cards/repository_card.dart';
+import '../widgets/common/lazy_load_list_view.dart';
 
 /// Screen shown after successful authentication
 class LoggedInScreen extends StatefulWidget {

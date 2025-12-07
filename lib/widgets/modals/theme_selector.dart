@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/theme_model.dart';
-import '../main.dart';
+import '../../models/theme_model.dart';
+import '../../main.dart';
 
 /// Widget for selecting themes via a bottom sheet
 class ThemeSelector {

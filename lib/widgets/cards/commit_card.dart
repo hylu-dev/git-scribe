@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/github_comparison.dart';
+import '../../models/github_comparison.dart';
 
 /// Widget that displays a GitHub commit card
 class CommitCard extends StatelessWidget {
