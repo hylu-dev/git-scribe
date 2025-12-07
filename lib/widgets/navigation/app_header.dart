@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../services/auth_service.dart';
 import '../modals/theme_selector.dart';
 import 'breadcrumbs.dart';
@@ -29,12 +30,22 @@ class _AppHeaderState extends State<AppHeader> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              // App title
-              Text(
-                'GitScribe',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              // App title (clickable to go to repository screen)
+              InkWell(
+                onTap: () => context.goNamed('home'),
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    'GitScribe',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
               const Spacer(),
               // User info

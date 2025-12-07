@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'services/auth_service.dart';
-import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/logged_in_screen.dart';
 import 'screens/repository_branches_screen.dart';
 import 'screens/branch_comparison_screen.dart';
@@ -72,7 +72,7 @@ class AppRouter {
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/home',
