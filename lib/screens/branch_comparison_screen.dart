@@ -93,7 +93,10 @@ class _BranchComparisonScreenState extends State<BranchComparisonScreen> {
           AppHeader(
             breadcrumbs: [
               const BreadcrumbItem(label: 'Repositories', route: '/home'),
-              BreadcrumbItem(label: widget.repoName, route: null),
+              BreadcrumbItem(
+                label: widget.repoName,
+                route: '/repo/${widget.owner}/${widget.repoName}',
+              ),
               BreadcrumbItem(label: widget.branchName, route: null),
             ],
             trailingAction: IconButton(
