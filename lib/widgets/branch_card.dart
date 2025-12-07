@@ -6,8 +6,15 @@ import 'branch_actions_sheet.dart';
 /// Widget that displays a GitHub branch card
 class BranchCard extends StatelessWidget {
   final GitHubBranch branch;
+  final String owner;
+  final String repoName;
 
-  const BranchCard({super.key, required this.branch});
+  const BranchCard({
+    super.key,
+    required this.branch,
+    required this.owner,
+    required this.repoName,
+  });
 
   String _formatDate(DateTime? date) {
     if (date == null) return '';
@@ -41,7 +48,7 @@ class BranchCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: InkWell(
         onTap: () {
-          BranchActionsSheet.show(context, branch);
+          BranchActionsSheet.show(context, branch, owner, repoName);
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(

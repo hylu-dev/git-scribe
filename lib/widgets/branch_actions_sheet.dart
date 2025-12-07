@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/github_branch.dart';
 
 /// Bottom sheet for branch actions
@@ -7,6 +8,8 @@ class BranchActionsSheet {
   static void show(
     BuildContext context,
     GitHubBranch branch,
+    String owner,
+    String repoName,
   ) {
     showModalBottomSheet(
       context: context,
@@ -44,10 +47,17 @@ class BranchActionsSheet {
             ListTile(
               leading: const Icon(Icons.summarize),
               title: const Text('Summarize'),
-              subtitle: const Text('Generate a summary of this branch'),
+              subtitle: const Text('Compare branch with default branch'),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Implement summarize functionality
+                context.goNamed(
+                  'branch-comparison',
+                  pathParameters: {
+                    'owner': owner,
+                    'name': repoName,
+                    'branch': branch.name,
+                  },
+                );
               },
             ),
             ListTile(

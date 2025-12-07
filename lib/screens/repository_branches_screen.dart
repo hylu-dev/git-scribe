@@ -156,7 +156,11 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       padding: const EdgeInsets.all(8),
       itemBuilder: (context, index) {
         final branch = _branches[index];
-        return BranchCard(branch: branch);
+        return BranchCard(
+          branch: branch,
+          owner: widget.owner,
+          repoName: widget.repoName,
+        );
       },
     );
   }

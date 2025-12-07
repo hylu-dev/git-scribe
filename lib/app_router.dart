@@ -4,6 +4,7 @@ import 'services/auth_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/logged_in_screen.dart';
 import 'screens/repository_branches_screen.dart';
+import 'screens/branch_comparison_screen.dart';
 
 /// Router configuration for the app
 class AppRouter {
@@ -42,6 +43,7 @@ class AppRouter {
       final isLoginRoute = location == '/login' || location == '/';
       final isHomeRoute = location == '/home';
       final isRepoRoute = location.startsWith('/repo/');
+      final isCompareRoute = location.startsWith('/compare/');
 
       // If user is authenticated and trying to access login, redirect to home
       if (isAuthenticated && isLoginRoute) {
@@ -49,7 +51,7 @@ class AppRouter {
       }
 
       // If user is not authenticated and trying to access protected routes, redirect to login
-      if (!isAuthenticated && (isHomeRoute || isRepoRoute)) {
+      if (!isAuthenticated && (isHomeRoute || isRepoRoute || isCompareRoute)) {
         return '/login';
       }
 
@@ -88,6 +90,25 @@ class AppRouter {
             );
           }
           return RepositoryBranchesScreen(owner: owner, repoName: name);
+        },
+      ),
+      GoRoute(
+        path: '/compare/:owner/:name/:branch',
+        name: 'branch-comparison',
+        builder: (context, state) {
+          final owner = state.pathParameters['owner'] ?? '';
+          final name = state.pathParameters['name'] ?? '';
+          final branch = state.pathParameters['branch'] ?? '';
+          if (owner.isEmpty || name.isEmpty || branch.isEmpty) {
+            return const Scaffold(
+              body: Center(child: Text('Invalid comparison path')),
+            );
+          }
+          return BranchComparisonScreen(
+            owner: owner,
+            repoName: name,
+            branchName: branch,
+          );
         },
       ),
     ],

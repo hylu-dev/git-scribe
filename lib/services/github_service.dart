@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/github_repository.dart';
 import '../models/github_branch.dart';
+import '../models/github_comparison.dart';
 import 'supabase_service.dart';
 
 /// Service for interacting with GitHub API
@@ -181,6 +182,121 @@ class GitHubService {
         rethrow;
       }
       throw Exception('Error fetching branches: $e');
+    }
+  }
+
+  /// Compare two branches
+  /// Compares headBranch against baseBranch (typically main/master)
+  Future<GitHubComparison> compareBranches(
+    String owner,
+    String repo,
+    String baseBranch,
+    String headBranch,
+  ) async {
+    final token = _getAccessToken();
+    if (token == null) {
+      throw Exception('No GitHub access token found. Please sign in again.');
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          '$_baseUrl/repos/$owner/$repo/compare/$baseBranch...$headBranch',
+        ),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'GitScribe',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        // Add branch names to the response for easier access
+        json['base_branch'] = baseBranch;
+        json['head_branch'] = headBranch;
+
+        // Fetch individual commit diffs to get per-commit file changes
+        final commitsList = json['commits'] as List<dynamic>? ?? [];
+        final commitFutures = commitsList.map((commitJson) async {
+          final commitData = commitJson as Map<String, dynamic>;
+          final commitSha = commitData['sha'] as String?;
+
+          if (commitSha != null) {
+            try {
+              // Fetch full commit details including file changes
+              final commitResponse = await http.get(
+                Uri.parse('$_baseUrl/repos/$owner/$repo/commits/$commitSha'),
+                headers: {
+                  'Authorization': 'Bearer $token',
+                  'Accept': 'application/vnd.github.v3+json',
+                  'User-Agent': 'GitScribe',
+                },
+              );
+
+              if (commitResponse.statusCode == 200) {
+                final commitDetails =
+                    jsonDecode(commitResponse.body) as Map<String, dynamic>;
+                // Merge file changes into commit data
+                commitData['files'] = commitDetails['files'] ?? [];
+              }
+            } catch (_) {
+              // If commit fetch fails, continue without file details
+            }
+          }
+
+          return commitData;
+        });
+
+        // Wait for all commits to be processed
+        final updatedCommits = await Future.wait(commitFutures);
+        json['commits'] = updatedCommits;
+
+        return GitHubComparison.fromJson(json);
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized. Please sign in again.');
+      } else if (response.statusCode == 404) {
+        throw Exception('Repository or branch not found.');
+      } else {
+        throw Exception(
+          'Failed to compare branches: ${response.statusCode} - ${response.body}',
+        );
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Error comparing branches: $e');
+    }
+  }
+
+  /// Get the default branch for a repository (usually 'main' or 'master')
+  Future<String> getDefaultBranch(String owner, String repo) async {
+    final token = _getAccessToken();
+    if (token == null) {
+      throw Exception('No GitHub access token found. Please sign in again.');
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/repos/$owner/$repo'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'GitScribe',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        return json['default_branch'] as String? ?? 'main';
+      } else {
+        // Fallback to common defaults
+        return 'main';
+      }
+    } catch (_) {
+      // Fallback to common defaults
+      return 'main';
     }
   }
 }
