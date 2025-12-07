@@ -141,11 +141,6 @@ class _LoggedInScreenState extends State<LoggedInScreen>
             breadcrumbs: const [
               BreadcrumbItem(label: 'Repositories', route: '/home'),
             ],
-            trailingAction: IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _isLoading ? null : _loadRepositories,
-              tooltip: 'Refresh',
-            ),
           ),
           // Repositories list
           Expanded(child: _buildRepositoriesList()),

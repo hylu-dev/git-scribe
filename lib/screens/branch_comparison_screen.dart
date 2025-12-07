@@ -84,11 +84,6 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
               ),
               BreadcrumbItem(label: widget.branchName, route: null),
             ],
-            trailingAction: IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _isLoading ? null : _loadComparison,
-              tooltip: 'Refresh',
-            ),
           ),
           Expanded(child: _buildBody()),
         ],

@@ -71,11 +71,6 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
                 route: null, // Current page, not clickable
               ),
             ],
-            trailingAction: IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _isLoading ? null : _loadBranches,
-              tooltip: 'Refresh',
-            ),
           ),
           // Main content
           Expanded(child: _buildBody()),

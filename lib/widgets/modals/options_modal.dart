@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import '../../services/ai_service.dart';
+import '../../services/auth_service.dart';
 
-/// Modal dialog for configuring AI provider and API key
-class AIProviderConfigModal extends StatefulWidget {
-  const AIProviderConfigModal({super.key});
+/// Modal dialog for app options including AI provider config and logout
+class OptionsModal extends StatefulWidget {
+  const OptionsModal({super.key});
 
   static Future<void> show(BuildContext context) async {
     await showDialog<void>(
       context: context,
-      builder: (context) => const AIProviderConfigModal(),
+      builder: (context) => const OptionsModal(),
     );
   }
 
   @override
-  State<AIProviderConfigModal> createState() => _AIProviderConfigModalState();
+  State<OptionsModal> createState() => _OptionsModalState();
 }
 
-class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
+class _OptionsModalState extends State<OptionsModal> {
   final _aiService = AIService();
+  final _authService = AuthService();
   final _apiKeyController = TextEditingController();
   final _ollamaBaseUrlController = TextEditingController();
   AIProviderType? _selectedProvider;
@@ -179,21 +181,49 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
     }
   }
 
+  Future<void> _handleLogout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      Navigator.of(context).pop(); // Close options modal
+      await _authService.signOut();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Configure AI Provider'),
+      title: const Text('Options'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Provider selection
-            const Text(
-              'Select AI Provider',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            // AI Provider Configuration Section
+            Text(
+              'AI Provider',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            // Provider selection
             ...AIProviderType.values.map((provider) {
               return RadioListTile<AIProviderType>(
                 title: Text(_getProviderName(provider)),
@@ -279,6 +309,24 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
                 },
               ),
             ],
+            // Test button
+            if (_selectedProvider != null) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: (_isLoading || _isTesting) ? null : _testConnection,
+                icon: _isTesting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.network_check, size: 18),
+                label: Text(_isTesting ? 'Testing...' : 'Test Connection'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
+            ],
             // Test result message
             if (_testResult != null) ...[
               const SizedBox(height: 16),
@@ -343,36 +391,55 @@ class _AIProviderConfigModalState extends State<AIProviderConfigModal> {
                 ),
               ),
             ],
+            // Divider before logout section
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            // Logout Section
+            Text(
+              'Account',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _handleLogout,
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: (_isLoading || _isTesting)
-              ? null
-              : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        OutlinedButton.icon(
-          onPressed: (_isLoading || _isTesting) ? null : _testConnection,
-          icon: _isTesting
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.network_check, size: 18),
-          label: Text(_isTesting ? 'Testing...' : 'Test'),
-        ),
-        ElevatedButton(
-          onPressed: (_isLoading || _isTesting) ? null : _saveConfiguration,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Save'),
+        Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: (_isLoading || _isTesting)
+                    ? null
+                    : () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: (_isLoading || _isTesting)
+                    ? null
+                    : _saveConfiguration,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Save'),
+              ),
+            ],
+          ),
         ),
       ],
     );
