@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
 import '../services/github_service.dart';
@@ -360,12 +361,46 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
               Icons.auto_awesome,
               color: Theme.of(context).colorScheme.onSurface,
             ),
-            title: Text(
-              'AI Summary',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+            title: Row(
+              children: [
+                Text(
+                  'AI Summary',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      _copyToClipboard(_aiSummary!, isMarkdown: false),
+                  icon: const Icon(Icons.content_copy, size: 16),
+                  label: const Text('Copy Text'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () =>
+                      _copyToClipboard(_aiSummary!, isMarkdown: true),
+                  icon: const Icon(Icons.code, size: 16),
+                  label: const Text('Copy Markdown'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
             ),
             children: [
               Padding(
@@ -595,5 +630,60 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
         ..._selectedCommit!.files.map((file) => FileExpansionTile(file: file)),
       ],
     );
+  }
+
+  Future<void> _copyToClipboard(String text, {required bool isMarkdown}) async {
+    String contentToCopy = text;
+
+    if (!isMarkdown) {
+      // Strip markdown formatting to get plain text
+      contentToCopy = _stripMarkdown(text);
+    }
+
+    await Clipboard.setData(ClipboardData(text: contentToCopy));
+    if (mounted) {
+      Toast.success(
+        context,
+        isMarkdown
+            ? 'Markdown copied to clipboard'
+            : 'Text copied to clipboard',
+      );
+    }
+  }
+
+  String _stripMarkdown(String markdown) {
+    // Remove markdown headers
+    String text = markdown.replaceAll(
+      RegExp(r'^#{1,6}\s+', multiLine: true),
+      '',
+    );
+    // Remove bold/italic
+    text = text.replaceAll(RegExp(r'\*\*([^*]+)\*\*', multiLine: true), r'$1');
+    text = text.replaceAll(RegExp(r'\*([^*]+)\*', multiLine: true), r'$1');
+    text = text.replaceAll(RegExp(r'__([^_]+)__', multiLine: true), r'$1');
+    text = text.replaceAll(RegExp(r'_([^_]+)_', multiLine: true), r'$1');
+    // Remove code blocks
+    text = text.replaceAll(RegExp(r'```[\s\S]*?```', multiLine: true), '');
+    // Remove inline code
+    text = text.replaceAll(RegExp(r'`([^`]+)`', multiLine: true), r'$1');
+    // Remove links but keep text
+    text = text.replaceAll(
+      RegExp(r'\[([^\]]+)\]\([^\)]+\)', multiLine: true),
+      r'$1',
+    );
+    // Remove images
+    text = text.replaceAll(
+      RegExp(r'!\[([^\]]*)\]\([^\)]+\)', multiLine: true),
+      '',
+    );
+    // Remove list markers
+    text = text.replaceAll(RegExp(r'^[\s]*[-*+]\s+', multiLine: true), '');
+    text = text.replaceAll(RegExp(r'^[\s]*\d+\.\s+', multiLine: true), '');
+    // Remove blockquotes
+    text = text.replaceAll(RegExp(r'^>\s+', multiLine: true), '');
+    // Clean up multiple newlines
+    text = text.replaceAll(RegExp(r'\n{3,}', multiLine: true), '\n\n');
+    // Trim whitespace
+    return text.trim();
   }
 }
