@@ -153,9 +153,46 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       );
     }
 
+    // Check if we should use wide layout (tablet/desktop)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideLayout = screenWidth >= 800;
+
+    if (isWideLayout) {
+      return _buildWideBranchesList();
+    } else {
+      return _buildMobileBranchesList();
+    }
+  }
+
+  Widget _buildMobileBranchesList() {
     return ListView.builder(
       itemCount: _branches.length,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 80), // Extra bottom padding for FAB
+      itemBuilder: (context, index) {
+        final branch = _branches[index];
+        return BranchCard(
+          branch: branch,
+          owner: widget.owner,
+          repoName: widget.repoName,
+        );
+      },
+    );
+  }
+
+  Widget _buildWideBranchesList() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Calculate columns: 2 for tablets (800-1200px), 3 for larger screens
+    final crossAxisCount = screenWidth >= 1200 ? 3 : 2;
+
+    return GridView.builder(
+      itemCount: _branches.length,
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 80), // Extra bottom padding for FAB
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 2.5,
+      ),
       itemBuilder: (context, index) {
         final branch = _branches[index];
         return BranchCard(

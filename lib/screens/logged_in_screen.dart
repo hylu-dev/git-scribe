@@ -195,7 +195,9 @@ class _LoggedInScreenState extends State<LoggedInScreen>
             Icon(
               Icons.folder_outlined,
               size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -212,6 +214,18 @@ class _LoggedInScreenState extends State<LoggedInScreen>
       );
     }
 
+    // Check if we should use wide layout (tablet/desktop)
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideLayout = screenWidth >= 800;
+
+    if (isWideLayout) {
+      return _buildWideRepositoriesList();
+    } else {
+      return _buildMobileRepositoriesList();
+    }
+  }
+
+  Widget _buildMobileRepositoriesList() {
     return LazyLoadListView<GitHubRepository>(
       items: _repositories,
       itemBuilder: (context, repo, index) {
@@ -226,6 +240,34 @@ class _LoggedInScreenState extends State<LoggedInScreen>
         8,
         80,
       ), // Extra bottom padding for FAB
+    );
+  }
+
+  Widget _buildWideRepositoriesList() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Calculate columns: 2 for tablets (800-1200px), 3 for larger screens
+    final crossAxisCount = screenWidth >= 1200 ? 3 : 2;
+
+    return LazyLoadListView<GitHubRepository>(
+      items: _repositories,
+      itemBuilder: (context, repo, index) {
+        return _buildAnimatedRepositoryCard(repo, index);
+      },
+      loadMore: _loadMoreRepositories,
+      hasMore: _hasMore,
+      isLoadingMore: _isLoadingMore,
+      padding: const EdgeInsets.fromLTRB(
+        8,
+        8,
+        8,
+        80,
+      ), // Extra bottom padding for FAB
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 2.5,
+      ),
     );
   }
 

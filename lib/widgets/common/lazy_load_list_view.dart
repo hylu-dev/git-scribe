@@ -37,6 +37,9 @@ class LazyLoadListView<T> extends StatefulWidget {
   /// Widget to show when there are no more items
   final Widget? endOfListWidget;
 
+  /// Grid delegate for grid layout (if null, uses ListView)
+  final SliverGridDelegate? gridDelegate;
+
   const LazyLoadListView({
     super.key,
     required this.items,
@@ -50,6 +53,7 @@ class LazyLoadListView<T> extends StatefulWidget {
     this.loadMoreThreshold = 0.8,
     this.loadingMoreWidget,
     this.endOfListWidget,
+    this.gridDelegate,
   });
 
   @override
@@ -122,6 +126,40 @@ class _LazyLoadListViewState<T> extends State<LazyLoadListView<T>> {
         widget.items.length +
         (widget.hasMore && widget.isLoadingMore ? 1 : 0) +
         (!widget.hasMore && widget.items.isNotEmpty ? 1 : 0);
+
+    // Use GridView if gridDelegate is provided, otherwise use ListView
+    if (widget.gridDelegate != null) {
+      return GridView.builder(
+        controller: _scrollController,
+        itemCount: itemCount,
+        padding: widget.padding,
+        gridDelegate: widget.gridDelegate!,
+        itemBuilder: (context, index) {
+          // Show items
+          if (index < widget.items.length) {
+            return widget.itemBuilder(context, widget.items[index], index);
+          }
+
+          // Show loading indicator
+          if (index == widget.items.length &&
+              widget.hasMore &&
+              widget.isLoadingMore) {
+            return widget.loadingMoreWidget ??
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+          }
+
+          // Show end of list indicator
+          if (index == widget.items.length && !widget.hasMore) {
+            return widget.endOfListWidget ?? const SizedBox.shrink();
+          }
+
+          return const SizedBox.shrink();
+        },
+      );
+    }
 
     return ListView.builder(
       controller: _scrollController,

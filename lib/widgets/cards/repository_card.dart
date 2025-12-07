@@ -15,17 +15,27 @@ class RepositoryCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: Icon(
-          repo.isPrivate ? Icons.lock : Icons.code,
-          color: repo.isPrivate
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-        ),
-        title: Text(
-          repo.fullName,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            Icon(
+              repo.isPrivate ? Icons.lock : Icons.code,
+              size: 20,
+              color: repo.isPrivate
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                repo.fullName,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
