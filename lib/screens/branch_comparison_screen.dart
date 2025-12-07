@@ -37,6 +37,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   String? _baseBranch;
   bool _isGeneratingSummary = false;
   String? _aiSummary;
+  bool _isSummaryExpanded = false;
 
   @override
   void initState() {
@@ -73,7 +74,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
         _isLoading = false;
       });
 
-      // Load cached summary if available
+      // Load cached summary if available (but don't auto-expand)
       _loadCachedSummary();
     } catch (e) {
       setState(() {
@@ -95,6 +96,8 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
       if (mounted) {
         setState(() {
           _aiSummary = cachedSummary;
+          // Don't auto-expand cached summaries
+          _isSummaryExpanded = false;
         });
       }
     } catch (_) {
@@ -243,7 +246,6 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
         if (_aiSummary != null) ...[
           Container(
             margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
@@ -254,96 +256,88 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
                 width: 1,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: ExpansionTile(
+              initiallyExpanded: _isSummaryExpanded,
+              onExpansionChanged: (expanded) {
+                setState(() {
+                  _isSummaryExpanded = expanded;
+                });
+              },
+              leading: Icon(
+                Icons.auto_awesome,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              title: Text(
+                'AI Summary',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'AI Summary',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: MarkdownBody(
+                    data: _aiSummary!,
+                    styleSheet: MarkdownStyleSheet(
+                      p: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      h1: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        setState(() {
-                          _aiSummary = null;
-                        });
-                      },
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                MarkdownBody(
-                  data: _aiSummary!,
-                  styleSheet: MarkdownStyleSheet(
-                    p: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    h1: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    h2: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    h3: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    strong: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    em: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    code: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontFamily: 'monospace',
-                      color: Theme.of(context).colorScheme.onSurface,
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withValues(alpha: 0.5),
-                    ),
-                    codeblockDecoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    codeblockPadding: const EdgeInsets.all(12),
-                    listBullet: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                    blockquote: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontStyle: FontStyle.italic,
-                        ),
-                    blockquoteDecoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 4,
+                      h2: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      h3: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      strong: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      em: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      code: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontFamily: 'monospace',
+                        color: Theme.of(context).colorScheme.onSurface,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.5),
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      codeblockPadding: const EdgeInsets.all(12),
+                      listBullet: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                      blockquote: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontStyle: FontStyle.italic,
+                          ),
+                      blockquoteDecoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 4,
+                          ),
                         ),
                       ),
+                      blockquotePadding: const EdgeInsets.only(left: 16),
                     ),
-                    blockquotePadding: const EdgeInsets.only(left: 16),
                   ),
                 ),
               ],
@@ -392,6 +386,8 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
         setState(() {
           _aiSummary = summary;
           _isGeneratingSummary = false;
+          // Auto-expand when generating a new summary
+          _isSummaryExpanded = true;
         });
       }
     } catch (e) {
