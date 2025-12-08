@@ -1,11 +1,28 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/services.dart';
 
 /// Service for handling OAuth callbacks on desktop platforms using a local HTTP server
 class OAuthCallbackServer {
   HttpServer? _server;
   Completer<Map<String, String>>? _completer;
   int? _port;
+  String? _successHtmlTemplate;
+  String? _errorHtmlTemplate;
+
+  /// Load HTML templates from Flutter assets
+  Future<void> _loadTemplates() async {
+    if (_successHtmlTemplate != null && _errorHtmlTemplate != null) {
+      return; // Already loaded
+    }
+
+    _successHtmlTemplate = await rootBundle.loadString(
+      'assets/oauth_templates/success.html',
+    );
+    _errorHtmlTemplate = await rootBundle.loadString(
+      'assets/oauth_templates/error.html',
+    );
+  }
 
   /// Start the local HTTP server
   /// Returns the callback URL and a Future that completes with the callback URL parameters
@@ -56,16 +73,8 @@ class OAuthCallbackServer {
       // Check for error in callback
       final hasError = params.containsKey('error');
 
-      // Send appropriate page
-      request.response
-        ..statusCode = HttpStatus.ok
-        ..headers.contentType = ContentType.html
-        ..write(
-          hasError
-              ? _getErrorHtml(params['error'] ?? 'Unknown error')
-              : _getSuccessHtml(),
-        )
-        ..close();
+      // Send appropriate page (async to load templates)
+      _sendResponse(request, hasError, params['error'] ?? 'Unknown error');
 
       // Complete the future with the parameters
       if (_completer != null && !_completer!.isCompleted) {
@@ -78,6 +87,23 @@ class OAuthCallbackServer {
         ..write('Not Found')
         ..close();
     }
+  }
+
+  /// Send HTML response (async to load templates from assets)
+  Future<void> _sendResponse(
+    HttpRequest request,
+    bool hasError,
+    String error,
+  ) async {
+    final html = hasError
+        ? await _getErrorHtml(error)
+        : await _getSuccessHtml();
+
+    request.response
+      ..statusCode = HttpStatus.ok
+      ..headers.contentType = ContentType.html
+      ..write(html)
+      ..close();
   }
 
   /// Stop the server
@@ -112,97 +138,17 @@ class OAuthCallbackServer {
     throw Exception('Could not find an available port');
   }
 
-  /// Get HTML for error page
-  String _getErrorHtml(String error) {
-    return '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authentication Error - GitScribe</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
-            color: #333;
-        }
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        .error-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: #ef4444;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .error-icon::before {
-            content: '✕';
-            color: white;
-            font-size: 48px;
-            font-weight: bold;
-        }
-        h1 {
-            font-size: 1.75rem;
-            margin-bottom: 0.5rem;
-            color: #1f2937;
-        }
-        p {
-            color: #6b7280;
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-        .error-message {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #fef2f2;
-            border-radius: 8px;
-            color: #991b1b;
-            font-size: 0.875rem;
-        }
-        .close-hint {
-            margin-top: 1.5rem;
-            font-size: 0.875rem;
-            color: #9ca3af;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="error-icon"></div>
-        <h1>Authentication Failed</h1>
-        <p>There was an error during authentication.</p>
-        <div class="error-message">${_escapeHtml(error)}</div>
-        <p class="close-hint">You can close this window and try again.</p>
-    </div>
-    <script>
-        // Auto-close after 5 seconds
-        setTimeout(() => {
-            window.close();
-        }, 5000);
-    </script>
-</body>
-</html>
-''';
+  /// Get HTML for error page - matches Material 3 design
+  Future<String> _getErrorHtml(String error) async {
+    await _loadTemplates();
+    final escapedError = _escapeHtml(error);
+    return _errorHtmlTemplate!.replaceAll('{{ERROR_MESSAGE}}', escapedError);
+  }
+
+  /// Get HTML for success page - matches Material 3 design
+  Future<String> _getSuccessHtml() async {
+    await _loadTemplates();
+    return _successHtmlTemplate!;
   }
 
   /// Escape HTML special characters
@@ -213,98 +159,5 @@ class OAuthCallbackServer {
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#39;');
-  }
-
-  /// Get HTML for success page
-  String _getSuccessHtml() {
-    return '''
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authentication Successful - GitScribe</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-        }
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-        .success-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 1.5rem;
-            background: #10b981;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: scaleIn 0.5s ease-out;
-        }
-        .success-icon::before {
-            content: '✓';
-            color: white;
-            font-size: 48px;
-            font-weight: bold;
-        }
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-        h1 {
-            font-size: 1.75rem;
-            margin-bottom: 0.5rem;
-            color: #1f2937;
-        }
-        p {
-            color: #6b7280;
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-        .close-hint {
-            margin-top: 1.5rem;
-            font-size: 0.875rem;
-            color: #9ca3af;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="success-icon"></div>
-        <h1>Authentication Successful!</h1>
-        <p>You have successfully authenticated with GitHub. You can close this window and return to GitScribe.</p>
-        <p class="close-hint">This window will close automatically in a few seconds...</p>
-    </div>
-    <script>
-        // Auto-close after 3 seconds
-        setTimeout(() => {
-            window.close();
-        }, 3000);
-    </script>
-</body>
-</html>
-''';
   }
 }
