@@ -34,9 +34,27 @@ class _OptionsModalState extends State<OptionsModal> {
   void initState() {
     super.initState();
     _selectedProvider = _aiService.providerType;
-    _apiKeyController.text = _aiService.apiKey ?? '';
-    _ollamaBaseUrlController.text =
-        _aiService.ollamaBaseUrl ?? 'http://localhost:11434';
+    _loadProviderConfiguration();
+  }
+
+  Future<void> _loadProviderConfiguration() async {
+    if (_selectedProvider != null) {
+      // Load saved API key for the selected provider
+      final savedApiKey = await _aiService.getSavedApiKey(_selectedProvider!);
+      _apiKeyController.text = savedApiKey ?? _aiService.apiKey ?? '';
+      
+      // Load Ollama base URL if applicable
+      if (_selectedProvider == AIProviderType.ollama) {
+        final savedBaseUrl = await _aiService.getSavedBaseUrl();
+        _ollamaBaseUrlController.text =
+            savedBaseUrl ?? _aiService.ollamaBaseUrl ?? 'http://localhost:11434';
+      }
+    } else {
+      // Fallback to current service values
+      _apiKeyController.text = _aiService.apiKey ?? '';
+      _ollamaBaseUrlController.text =
+          _aiService.ollamaBaseUrl ?? 'http://localhost:11434';
+    }
   }
 
   @override
@@ -95,7 +113,7 @@ class _OptionsModalState extends State<OptionsModal> {
     });
 
     try {
-      _aiService.setProvider(
+      await _aiService.setProvider(
         _selectedProvider!,
         apiKey: _apiKeyController.text.trim().isEmpty
             ? null
@@ -105,6 +123,7 @@ class _OptionsModalState extends State<OptionsModal> {
                   ? null
                   : _ollamaBaseUrlController.text.trim())
             : null,
+        saveToStorage: true,
       );
 
       if (mounted) {
@@ -146,8 +165,8 @@ class _OptionsModalState extends State<OptionsModal> {
     });
 
     try {
-      // Temporarily set the provider to test it
-      _aiService.setProvider(
+      // Temporarily set the provider to test it (don't save to storage during test)
+      await _aiService.setProvider(
         _selectedProvider!,
         apiKey: _apiKeyController.text.trim().isEmpty
             ? null
@@ -157,6 +176,7 @@ class _OptionsModalState extends State<OptionsModal> {
                   ? null
                   : _ollamaBaseUrlController.text.trim())
             : null,
+        saveToStorage: false, // Don't save during test
       );
 
       final isWorking = await _aiService.testProvider();
@@ -175,6 +195,60 @@ class _OptionsModalState extends State<OptionsModal> {
         _isTesting = false;
         _testResult = 'Test failed: $e';
       });
+    }
+  }
+
+  Future<void> _handleClearSaved() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Saved API Keys'),
+        content: const Text(
+          'Are you sure you want to clear all saved API keys? This will remove all stored credentials for all providers.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await _aiService.clearSavedConfiguration();
+        
+        // Clear the form fields
+        _apiKeyController.clear();
+        _ollamaBaseUrlController.text = 'http://localhost:11434';
+        setState(() {
+          _selectedProvider = null;
+          _errorMessage = null;
+          _testResult = null;
+        });
+
+        if (mounted) {
+          Toast.success(
+            context,
+            'All saved API keys have been cleared',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Failed to clear saved keys: $e';
+          });
+        }
+      }
     }
   }
 
@@ -233,11 +307,14 @@ class _OptionsModalState extends State<OptionsModal> {
                 // ignore: deprecated_member_use
                 groupValue: _selectedProvider,
                 // ignore: deprecated_member_use
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     _selectedProvider = value;
                     _errorMessage = null;
                   });
+                  // Load saved API key for the newly selected provider
+                  await _loadProviderConfiguration();
+                  setState(() {}); // Update UI with loaded values
                 },
               );
             }),
@@ -327,6 +404,17 @@ class _OptionsModalState extends State<OptionsModal> {
                 ),
               ),
             ],
+            // Clear saved API keys button
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: (_isLoading || _isTesting) ? null : _handleClearSaved,
+              icon: const Icon(Icons.delete_outline, size: 18),
+              label: const Text('Clear Saved API Keys'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                foregroundColor: Colors.red,
+              ),
+            ),
             // Test result message
             if (_testResult != null) ...[
               const SizedBox(height: 16),
