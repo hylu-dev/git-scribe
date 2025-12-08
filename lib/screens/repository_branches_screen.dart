@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/github_service.dart';
 import '../models/github_branch.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/cards/branch_card.dart';
 import '../widgets/common/refresh_button.dart';
+import '../widgets/common/toast.dart';
 
 /// Screen that displays branches for a repository
 class RepositoryBranchesScreen extends StatefulWidget {
@@ -51,8 +53,31 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      final errorMessage = e.toString();
+      
+      // Check if it's a token-related error
+      if (errorMessage.contains('No GitHub access token') ||
+          errorMessage.contains('Unauthorized') ||
+          errorMessage.contains('sign in again')) {
+        // Show toast and redirect to login
+        if (mounted) {
+          Toast.error(
+            context,
+            'Please sign in to access repository branches',
+          );
+          // Redirect to login after a brief delay to allow toast to show
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              context.go('/login');
+            }
+          });
+        }
+        return;
+      }
+      
+      // For other errors, show the error message as before
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = errorMessage;
         _isLoading = false;
       });
     }

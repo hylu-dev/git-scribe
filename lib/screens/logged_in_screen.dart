@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../services/github_service.dart';
 import '../models/github_repository.dart';
 import '../widgets/navigation/app_header.dart';
@@ -6,6 +7,7 @@ import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/cards/repository_card.dart';
 import '../widgets/common/lazy_load_list_view.dart';
 import '../widgets/common/refresh_button.dart';
+import '../widgets/common/toast.dart';
 
 /// Screen shown after successful authentication
 class LoggedInScreen extends StatefulWidget {
@@ -86,8 +88,31 @@ class _LoggedInScreenState extends State<LoggedInScreen>
         }
       });
     } catch (e) {
+      final errorMessage = e.toString();
+      
+      // Check if it's a token-related error
+      if (errorMessage.contains('No GitHub access token') ||
+          errorMessage.contains('Unauthorized') ||
+          errorMessage.contains('sign in again')) {
+        // Show toast and redirect to login
+        if (mounted) {
+          Toast.error(
+            context,
+            'Please sign in to access your repositories',
+          );
+          // Redirect to login after a brief delay to allow toast to show
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              context.go('/login');
+            }
+          });
+        }
+        return;
+      }
+      
+      // For other errors, show the error message as before
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = errorMessage;
         _isLoading = false;
         _showItems = false;
       });
@@ -113,8 +138,31 @@ class _LoggedInScreenState extends State<LoggedInScreen>
 
       return repos;
     } catch (e) {
+      final errorMessage = e.toString();
+      
+      // Check if it's a token-related error
+      if (errorMessage.contains('No GitHub access token') ||
+          errorMessage.contains('Unauthorized') ||
+          errorMessage.contains('sign in again')) {
+        // Show toast and redirect to login
+        if (mounted) {
+          Toast.error(
+            context,
+            'Please sign in to access your repositories',
+          );
+          // Redirect to login after a brief delay to allow toast to show
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              context.go('/login');
+            }
+          });
+        }
+        return [];
+      }
+      
+      // For other errors, show the error message
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = errorMessage;
         _isLoadingMore = false;
       });
       rethrow;
