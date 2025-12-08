@@ -10,11 +10,18 @@ class AuthService {
   /// Returns true if the OAuth flow was initiated successfully
   Future<bool> signInWithGitHub() async {
     try {
+      String? redirectTo;
+      if (kIsWeb) {
+        // For web, use the current origin to ensure correct redirect
+        // This will work for both localhost and production (Netlify)
+        redirectTo = '${Uri.base.origin}/auth/callback';
+      } else {
+        redirectTo = _getRedirectUrl();
+      }
+      
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.github,
-        redirectTo: kIsWeb
-            ? '${Uri.base.origin}/auth/callback}' // ← web: let Supabase pick the right URL
-            : _getRedirectUrl(), // ← mobile: your deep link
+        redirectTo: redirectTo,
         scopes: 'repo gist notifications',
       );
       return true;

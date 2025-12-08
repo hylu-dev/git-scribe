@@ -7,3 +7,10 @@ package = "netlify-plugin-flutter"
 # Configure the plugin to use the channel you need (stable is default)
 [plugins.inputs]
 channel = "stable" # Or 'beta', 'master'
+
+# Redirect all routes to index.html for SPA routing
+# This ensures client-side routing works correctly
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
