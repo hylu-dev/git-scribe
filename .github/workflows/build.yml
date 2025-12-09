@@ -1,4 +1,4 @@
-name: Desktop CI Build (Manual Select)
+name: Desktop CI Build
 
 on:
   # Uncomment the following lines to enable automatic running on push/PR
@@ -82,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: build/windows/runner/Release/*.exe
+          path: build/windows/x64/runner/Release/*.exe
 
   build_macos:
     name: Build macOS
