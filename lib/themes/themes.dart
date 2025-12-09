@@ -7,14 +7,14 @@ class Themes {
   /// Flutter Default theme - Flutter's default Material 3 dark theme
   static AppTheme get flutterDefault => AppTheme(
     name: 'Default',
-    description: 'Flutter\'s default Material 3 dark theme',
+    description: 'Default Material 3 dark theme',
     theme: _buildFlutterDefault(),
   );
 
   /// Flutter Light theme - Flutter's default Material 3 light theme
   static AppTheme get flutterLight => AppTheme(
     name: 'Light',
-    description: 'Flutter\'s default Material 3 light theme',
+    description: 'Default Material 3 light theme',
     theme: _buildFlutterLight(),
   );
 
@@ -53,6 +53,13 @@ class Themes {
     theme: _buildSolarizedDark(),
   );
 
+  /// Solarized Light theme - Light version of Solarized
+  static AppTheme get solarizedLight => AppTheme(
+    name: 'Solarized Light',
+    description: 'Light version of Solarized palette',
+    theme: _buildSolarizedLight(),
+  );
+
   /// Nord theme - Arctic, north-bluish color palette
   static AppTheme get nord => AppTheme(
     name: 'Nord',
@@ -74,18 +81,94 @@ class Themes {
     theme: _buildVSCodeDark(),
   );
 
-  /// Get all programming themes
+  /// Catppuccin Mocha theme - Warm dark theme
+  static AppTheme get catppuccinMocha => AppTheme(
+    name: 'Catppuccin Mocha',
+    description: 'Warm dark theme with pastel colors',
+    theme: _buildCatppuccinMocha(),
+  );
+
+  /// Catppuccin Latte theme - Warm light theme
+  static AppTheme get catppuccinLatte => AppTheme(
+    name: 'Catppuccin Latte',
+    description: 'Warm light theme with pastel colors',
+    theme: _buildCatppuccinLatte(),
+  );
+
+  /// Tokyo Night theme - Clean dark theme
+  static AppTheme get tokyoNight => AppTheme(
+    name: 'Tokyo Night',
+    description: 'Clean dark theme with blue accents',
+    theme: _buildTokyoNight(),
+  );
+
+  /// Ayu Dark theme - Modern dark theme
+  static AppTheme get ayuDark => AppTheme(
+    name: 'Ayu Dark',
+    description: 'Modern dark theme with vibrant colors',
+    theme: _buildAyuDark(),
+  );
+
+  /// Ayu Light theme - Modern light theme
+  static AppTheme get ayuLight => AppTheme(
+    name: 'Ayu Light',
+    description: 'Modern light theme with vibrant colors',
+    theme: _buildAyuLight(),
+  );
+
+  /// Tomorrow Night theme - Classic dark theme
+  static AppTheme get tomorrowNight => AppTheme(
+    name: 'Tomorrow Night',
+    description: 'Classic dark theme with high contrast',
+    theme: _buildTomorrowNight(),
+  );
+
+  /// PaperColor Dark theme - Minimalist dark theme
+  static AppTheme get paperColorDark => AppTheme(
+    name: 'PaperColor Dark',
+    description: 'Minimalist dark theme',
+    theme: _buildPaperColorDark(),
+  );
+
+  /// Everforest Dark theme - Soothing dark theme
+  static AppTheme get everforestDark => AppTheme(
+    name: 'Everforest Dark',
+    description: 'Soothing dark theme with green tones',
+    theme: _buildEverforestDark(),
+  );
+
+  /// Rose Pine theme - All natural pine theme
+  static AppTheme get rosePine => AppTheme(
+    name: 'Rosé Pine',
+    description: 'All natural pine theme',
+    theme: _buildRosePine(),
+  );
+
+  /// Get all programming themes ordered by popularity
+  /// Material defaults are kept at the topp
   static List<AppTheme> get all => [
+    // Material defaults at top
     flutterDefault,
     flutterLight,
+    // Most popular themes
+    vsCodeDark,
+    githubDark,
+    oneDark,
+    dracula,
+    nord,
+    catppuccinMocha,
+    tokyoNight,
     gruvbox,
     monokai,
-    dracula,
-    oneDark,
     solarizedDark,
-    nord,
-    githubDark,
-    vsCodeDark,
+    solarizedLight, // moved here, right after solarizedDark
+    ayuDark,
+    catppuccinLatte,
+    ayuLight,
+    tomorrowNight,
+    everforestDark,
+    rosePine,
+    paperColorDark,
   ];
 
   // Flutter Default theme implementation
@@ -104,21 +187,21 @@ class Themes {
     );
   }
 
-  // Gruvbox theme implementation
+  // Gruvbox theme implementation - more accurate colors
   static ThemeData _buildGruvbox() {
     final baseTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: const Color(0xFF282828),
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF458588),
-        secondary: Color(0xFF98971A),
+        primary: Color(0xFF458588), // Blue
+        secondary: Color(0xFF98971A), // Green
         surface: Color(0xFF3C3836),
-        error: Color(0xFFCC241D),
-        onPrimary: Color(0xFFEBDBB2),
+        error: Color(0xFFCC241D), // Red
+        onPrimary: Color(0xFFEBDBB2), // Foreground
         onSecondary: Color(0xFF282828),
         onSurface: Color(0xFFEBDBB2),
-        onError: Color(0xFFFFFFFF),
+        onError: Color(0xFFEBDBB2),
       ),
     );
     return baseTheme.copyWith(
@@ -126,21 +209,21 @@ class Themes {
     );
   }
 
-  // Monokai theme implementation
+  // Monokai theme implementation - more accurate colors
   static ThemeData _buildMonokai() {
     final baseTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: const Color(0xFF272822),
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF66D9EF),
-        secondary: Color(0xFFA6E22E),
+        primary: Color(0xFF66D9EF), // Cyan
+        secondary: Color(0xFFA6E22E), // Green
         surface: Color(0xFF3E3D32),
-        error: Color(0xFFF92672),
+        error: Color(0xFFF92672), // Pink/Red
         onPrimary: Color(0xFF272822),
         onSecondary: Color(0xFF272822),
-        onSurface: Color(0xFFF8F8F2),
-        onError: Color(0xFFFFFFFF),
+        onSurface: Color(0xFFF8F8F2), // Foreground
+        onError: Color(0xFFF8F8F2),
       ),
     );
     return baseTheme.copyWith(
@@ -148,21 +231,21 @@ class Themes {
     );
   }
 
-  // Dracula theme implementation
+  // Dracula theme implementation - more accurate colors
   static ThemeData _buildDracula() {
     final baseTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: const Color(0xFF282A36),
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFFBD93F9),
-        secondary: Color(0xFF50FA7B),
+        primary: Color(0xFFBD93F9), // Purple
+        secondary: Color(0xFF50FA7B), // Green
         surface: Color(0xFF44475A),
-        error: Color(0xFFFF5555),
-        onPrimary: Color(0xFFF8F8F2),
+        error: Color(0xFFFF5555), // Red
+        onPrimary: Color(0xFF282A36),
         onSecondary: Color(0xFF282A36),
-        onSurface: Color(0xFFF8F8F2),
-        onError: Color(0xFFFFFFFF),
+        onSurface: Color(0xFFF8F8F2), // Foreground
+        onError: Color(0xFFF8F8F2),
       ),
     );
     return baseTheme.copyWith(
@@ -170,21 +253,21 @@ class Themes {
     );
   }
 
-  // One Dark theme implementation
+  // One Dark theme implementation - more accurate colors
   static ThemeData _buildOneDark() {
     final baseTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: const Color(0xFF282C34),
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF61AFEF),
-        secondary: Color(0xFF98C379),
+        primary: Color(0xFF61AFEF), // Blue
+        secondary: Color(0xFF98C379), // Green
         surface: Color(0xFF353B45),
-        error: Color(0xFFE06C75),
-        onPrimary: Color(0xFFABB2BF),
+        error: Color(0xFFE06C75), // Red
+        onPrimary: Color(0xFF282C34),
         onSecondary: Color(0xFF282C34),
-        onSurface: Color(0xFFABB2BF),
-        onError: Color(0xFFFFFFFF),
+        onSurface: Color(0xFFABB2BF), // Foreground
+        onError: Color(0xFFABB2BF),
       ),
     );
     return baseTheme.copyWith(
@@ -206,6 +289,28 @@ class Themes {
         onPrimary: Color(0xFFFDF6E3),
         onSecondary: Color(0xFF002B36),
         onSurface: Color(0xFF839496),
+        onError: Color(0xFFFFFFFF),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Solarized Light theme implementation
+  static ThemeData _buildSolarizedLight() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: const Color(0xFFFDF6E3),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF268BD2), // Blue
+        secondary: Color(0xFF859900), // Green
+        surface: Color(0xFFEEE8D5),
+        error: Color(0xFFDC322F), // Red
+        onPrimary: Color(0xFFFFFFFF),
+        onSecondary: Color(0xFFFFFFFF),
+        onSurface: Color(0xFF586E75), // Foreground
         onError: Color(0xFFFFFFFF),
       ),
     );
@@ -258,21 +363,219 @@ class Themes {
     );
   }
 
-  // VS Code Dark+ theme implementation
+  // VS Code Dark+ theme implementation - more accurate colors
   static ThemeData _buildVSCodeDark() {
     final baseTheme = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: const Color(0xFF1E1E1E),
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF007ACC),
-        secondary: Color(0xFF0E639C),
+        primary: Color(0xFF007ACC), // Blue
+        secondary: Color(0xFF0E639C), // Darker blue
         surface: Color(0xFF252526),
-        error: Color(0xFFF48771),
+        error: Color(0xFFF48771), // Orange-red
         onPrimary: Color(0xFFFFFFFF),
         onSecondary: Color(0xFFFFFFFF),
-        onSurface: Color(0xFFCCCCCC),
+        onSurface: Color(0xFFD4D4D4), // Foreground
         onError: Color(0xFFFFFFFF),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Catppuccin Mocha theme implementation
+  static ThemeData _buildCatppuccinMocha() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF1E1E2E),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF89B4FA), // Blue
+        secondary: Color(0xFFA6E3A1), // Green
+        surface: Color(0xFF313244),
+        error: Color(0xFFF38BA8), // Red
+        onPrimary: Color(0xFF1E1E2E),
+        onSecondary: Color(0xFF1E1E2E),
+        onSurface: Color(0xFFCDD6F4), // Foreground
+        onError: Color(0xFF1E1E2E),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Catppuccin Latte theme implementation
+  static ThemeData _buildCatppuccinLatte() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: const Color(0xFFEFF1F5),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF1E66F5), // Blue
+        secondary: Color(0xFF40A02B), // Green
+        surface: Color(0xFFDCE0E8),
+        error: Color(0xFFD20F39), // Red
+        onPrimary: Color(0xFFFFFFFF),
+        onSecondary: Color(0xFFFFFFFF),
+        onSurface: Color(0xFF4C4F69), // Foreground
+        onError: Color(0xFFFFFFFF),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Tokyo Night theme implementation
+  static ThemeData _buildTokyoNight() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF1A1B26),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF7AA2F7), // Blue
+        secondary: Color(0xFF9ECE6A), // Green
+        surface: Color(0xFF24283B),
+        error: Color(0xFFF7768E), // Red
+        onPrimary: Color(0xFF1A1B26),
+        onSecondary: Color(0xFF1A1B26),
+        onSurface: Color(0xFFC0CAF5), // Foreground
+        onError: Color(0xFF1A1B26),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Ayu Dark theme implementation
+  static ThemeData _buildAyuDark() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF0F1419),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF39BAE6), // Cyan
+        secondary: Color(0xFFAAD94C), // Green
+        surface: Color(0xFF1C2325),
+        error: Color(0xFFFF6B6B), // Red
+        onPrimary: Color(0xFF0F1419),
+        onSecondary: Color(0xFF0F1419),
+        onSurface: Color(0xFFE6E1CF), // Foreground
+        onError: Color(0xFF0F1419),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Ayu Light theme implementation
+  static ThemeData _buildAyuLight() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF0099CC), // Blue
+        secondary: Color(0xFF86B300), // Green
+        surface: Color(0xFFF8F8F8),
+        error: Color(0xFFFF3333), // Red
+        onPrimary: Color(0xFFFFFFFF),
+        onSecondary: Color(0xFFFFFFFF),
+        onSurface: Color(0xFF5C6773), // Foreground
+        onError: Color(0xFFFFFFFF),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Tomorrow Night theme implementation
+  static ThemeData _buildTomorrowNight() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF1D1F21),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF81A2BE), // Blue
+        secondary: Color(0xFFB5BD68), // Yellow-green
+        surface: Color(0xFF282A2E),
+        error: Color(0xFFCC6666), // Red
+        onPrimary: Color(0xFF1D1F21),
+        onSecondary: Color(0xFF1D1F21),
+        onSurface: Color(0xFFC5C8C6), // Foreground
+        onError: Color(0xFF1D1F21),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // PaperColor Dark theme implementation
+  static ThemeData _buildPaperColorDark() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF1C1C1C),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF0087D7), // Blue
+        secondary: Color(0xFF00AF87), // Green
+        surface: Color(0xFF262626),
+        error: Color(0xFFD70000), // Red
+        onPrimary: Color(0xFFFFFFFF),
+        onSecondary: Color(0xFFFFFFFF),
+        onSurface: Color(0xFFEEEEEE), // Foreground
+        onError: Color(0xFFFFFFFF),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Everforest Dark theme implementation
+  static ThemeData _buildEverforestDark() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF2B3339),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF7FBBB3), // Teal
+        secondary: Color(0xFFA7C080), // Green
+        surface: Color(0xFF323C41),
+        error: Color(0xFFE67E80), // Red
+        onPrimary: Color(0xFF2B3339),
+        onSecondary: Color(0xFF2B3339),
+        onSurface: Color(0xFFD3C6AA), // Foreground
+        onError: Color(0xFF2B3339),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
+  // Rosé Pine theme implementation
+  static ThemeData _buildRosePine() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF191724),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFFEBBCBA), // Rose
+        secondary: Color(0xFF9CCFD8), // Foam
+        surface: Color(0xFF1F1D2E),
+        error: Color(0xFFEB6F92), // Love
+        onPrimary: Color(0xFF191724),
+        onSecondary: Color(0xFF191724),
+        onSurface: Color(0xFFE0DEF4), // Text
+        onError: Color(0xFF191724),
       ),
     );
     return baseTheme.copyWith(

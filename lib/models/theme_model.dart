@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// ThemeModel manages the current theme state of the application
 class ThemeModel extends ChangeNotifier {
+  static const String _themePreferenceKey = 'selected_theme_name';
+
   ThemeModel() {
     // _currentTheme is already initialized with a default theme
   }
@@ -21,8 +24,23 @@ class ThemeModel extends ChangeNotifier {
   /// Get all available themes
   List<AppTheme> get themes => List.unmodifiable(_themes);
 
-  /// Set the current theme
-  void setTheme(AppTheme theme) {
+  /// Set the current theme and save it to preferences
+  Future<void> setTheme(AppTheme theme) async {
+    _currentTheme = theme;
+    notifyListeners();
+
+    // Save theme name to preferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_themePreferenceKey, theme.name);
+    } catch (e) {
+      // Silently fail if preferences can't be saved
+      debugPrint('Failed to save theme preference: $e');
+    }
+  }
+
+  /// Temporarily preview a theme without saving to preferences
+  void previewTheme(AppTheme theme) {
     if (_currentTheme != theme) {
       _currentTheme = theme;
       notifyListeners();
@@ -32,12 +50,32 @@ class ThemeModel extends ChangeNotifier {
   /// Get the theme data
   ThemeData get theme => _currentTheme.theme;
 
-  /// Initialize themes from a collection
-  void initializeThemes(List<AppTheme> themes) {
+  /// Initialize themes from a collection and load saved theme
+  Future<void> initializeThemes(List<AppTheme> themes) async {
     _themes.clear();
     _themes.addAll(themes);
-    if (_themes.isNotEmpty && _currentTheme.name == 'Default') {
-      _currentTheme = _themes.first;
+
+    // Try to load saved theme
+    String? savedThemeName;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      savedThemeName = prefs.getString(_themePreferenceKey);
+    } catch (e) {
+      debugPrint('Failed to load theme preference: $e');
+    }
+
+    // Find and set the saved theme, or default to first theme
+    if (_themes.isNotEmpty) {
+      if (savedThemeName != null) {
+        final savedTheme = _themes.firstWhere(
+          (theme) => theme.name == savedThemeName,
+          orElse: () => _themes.first,
+        );
+        _currentTheme = savedTheme;
+      } else {
+        // No saved theme, use first theme
+        _currentTheme = _themes.first;
+      }
       notifyListeners();
     }
   }
@@ -54,4 +92,13 @@ class AppTheme {
     this.description = '',
     required this.theme,
   });
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AppTheme && other.name == name;
+  }
+
+  @override
+  int get hashCode => name.hashCode;
 }
