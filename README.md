@@ -2,6 +2,8 @@
 
 **AI-powered GitHub branch analysis made simple**
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/27eacb57-b520-433b-8b54-ae350d2a3f6d/deploy-status)](https://app.netlify.com/projects/git-scribe/deploys)
+
 GitScribe is a Flutter application that helps you understand your GitHub repository changes through AI-generated summaries. Browse your repositories, compare branches, and get intelligent insights into code changes with support for multiple AI providers.
 
 ## Features
