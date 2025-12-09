@@ -41,6 +41,14 @@ class ThemeModel extends ChangeNotifier {
     }
   }
 
+  /// Temporarily preview a theme without saving to preferences
+  void previewTheme(AppTheme theme) {
+    if (_currentTheme != theme) {
+      _currentTheme = theme;
+      notifyListeners();
+    }
+  }
+
   /// Get the theme data
   ThemeData get theme => _currentTheme.theme;
 

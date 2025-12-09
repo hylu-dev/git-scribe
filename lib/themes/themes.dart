@@ -53,6 +53,13 @@ class Themes {
     theme: _buildSolarizedDark(),
   );
 
+  /// Solarized Light theme - Light version of Solarized
+  static AppTheme get solarizedLight => AppTheme(
+    name: 'Solarized Light',
+    description: 'Light version of Solarized palette',
+    theme: _buildSolarizedLight(),
+  );
+
   /// Nord theme - Arctic, north-bluish color palette
   static AppTheme get nord => AppTheme(
     name: 'Nord',
@@ -72,13 +79,6 @@ class Themes {
     name: 'VS Code Dark+',
     description: 'Default VS Code dark theme',
     theme: _buildVSCodeDark(),
-  );
-
-  /// Solarized Light theme - Light version of Solarized
-  static AppTheme get solarizedLight => AppTheme(
-    name: 'Solarized Light',
-    description: 'Light version of Solarized palette',
-    theme: _buildSolarizedLight(),
   );
 
   /// Catppuccin Mocha theme - Warm dark theme
@@ -144,28 +144,31 @@ class Themes {
     theme: _buildRosePine(),
   );
 
-  /// Get all programming themes
+  /// Get all programming themes ordered by popularity
+  /// Material defaults are kept at the topp
   static List<AppTheme> get all => [
+    // Material defaults at top
     flutterDefault,
     flutterLight,
+    // Most popular themes
+    vsCodeDark,
+    githubDark,
+    oneDark,
+    dracula,
+    nord,
+    catppuccinMocha,
+    tokyoNight,
     gruvbox,
     monokai,
-    dracula,
-    oneDark,
     solarizedDark,
-    solarizedLight,
-    nord,
-    githubDark,
-    vsCodeDark,
-    catppuccinMocha,
-    catppuccinLatte,
-    tokyoNight,
+    solarizedLight, // moved here, right after solarizedDark
     ayuDark,
+    catppuccinLatte,
     ayuLight,
     tomorrowNight,
-    paperColorDark,
     everforestDark,
     rosePine,
+    paperColorDark,
   ];
 
   // Flutter Default theme implementation
@@ -294,6 +297,28 @@ class Themes {
     );
   }
 
+  // Solarized Light theme implementation
+  static ThemeData _buildSolarizedLight() {
+    final baseTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: const Color(0xFFFDF6E3),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF268BD2), // Blue
+        secondary: Color(0xFF859900), // Green
+        surface: Color(0xFFEEE8D5),
+        error: Color(0xFFDC322F), // Red
+        onPrimary: Color(0xFFFFFFFF),
+        onSecondary: Color(0xFFFFFFFF),
+        onSurface: Color(0xFF586E75), // Foreground
+        onError: Color(0xFFFFFFFF),
+      ),
+    );
+    return baseTheme.copyWith(
+      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
+    );
+  }
+
   // Nord theme implementation
   static ThemeData _buildNord() {
     final baseTheme = ThemeData(
@@ -352,28 +377,6 @@ class Themes {
         onPrimary: Color(0xFFFFFFFF),
         onSecondary: Color(0xFFFFFFFF),
         onSurface: Color(0xFFD4D4D4), // Foreground
-        onError: Color(0xFFFFFFFF),
-      ),
-    );
-    return baseTheme.copyWith(
-      textTheme: GoogleFonts.firaCodeTextTheme(baseTheme.textTheme),
-    );
-  }
-
-  // Solarized Light theme implementation
-  static ThemeData _buildSolarizedLight() {
-    final baseTheme = ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      scaffoldBackgroundColor: const Color(0xFFFDF6E3),
-      colorScheme: const ColorScheme.light(
-        primary: Color(0xFF268BD2), // Blue
-        secondary: Color(0xFF859900), // Green
-        surface: Color(0xFFEEE8D5),
-        error: Color(0xFFDC322F), // Red
-        onPrimary: Color(0xFFFFFFFF),
-        onSecondary: Color(0xFFFFFFFF),
-        onSurface: Color(0xFF586E75), // Foreground
         onError: Color(0xFFFFFFFF),
       ),
     );
