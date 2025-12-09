@@ -6,6 +6,7 @@ import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/cards/branch_card.dart';
 import '../widgets/common/refresh_button.dart';
+import '../widgets/common/lazy_load_list_view.dart';
 
 /// Screen that displays branches for a repository
 class RepositoryBranchesScreen extends StatefulWidget {
@@ -27,6 +28,8 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   final GitHubService _githubService = GitHubService();
   List<GitHubBranch> _branches = [];
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
   String? _errorMessage;
 
   @override
@@ -48,17 +51,24 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _hasMore = true;
+      if (forceRefresh) {
+        _branches = [];
+      }
     });
 
     try {
       final branches = await _githubService.getRepositoryBranches(
         widget.owner,
         widget.repoName,
+        page: 1,
+        perPage: 10,
         forceRefresh: forceRefresh,
       );
       setState(() {
         _branches = branches;
         _isLoading = false;
+        _hasMore = branches.length == 10; // If we got 10, there might be more
       });
     } catch (e) {
       final errorMessage = e.toString();
@@ -68,6 +78,47 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
         _errorMessage = errorMessage;
         _isLoading = false;
       });
+    }
+  }
+
+  Future<List<GitHubBranch>> _loadMoreBranches(int page) async {
+    if (!GitHubAccessGuard.ensureAccess(
+      context,
+      mounted: mounted,
+      showMessage: true,
+      message: 'Please sign in to access repository branches',
+    )) {
+      return [];
+    }
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final branches = await _githubService.getRepositoryBranches(
+        widget.owner,
+        widget.repoName,
+        page: page,
+        perPage: 10,
+      );
+
+      setState(() {
+        _branches.addAll(branches);
+        _hasMore = branches.length == 10; // If we got 10, there might be more
+        _isLoadingMore = false;
+      });
+
+      return branches;
+    } catch (e) {
+      final errorMessage = e.toString();
+
+      // For other errors, show the error message
+      setState(() {
+        _errorMessage = errorMessage;
+        _isLoadingMore = false;
+      });
+      rethrow;
     }
   }
 
@@ -180,22 +231,24 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   }
 
   Widget _buildMobileBranchesList() {
-    return ListView.builder(
-      itemCount: _branches.length,
-      padding: const EdgeInsets.fromLTRB(
-        8,
-        8,
-        8,
-        80,
-      ), // Extra bottom padding for FAB
-      itemBuilder: (context, index) {
-        final branch = _branches[index];
+    return LazyLoadListView<GitHubBranch>(
+      items: _branches,
+      itemBuilder: (context, branch, index) {
         return BranchCard(
           branch: branch,
           owner: widget.owner,
           repoName: widget.repoName,
         );
       },
+      loadMore: _loadMoreBranches,
+      hasMore: _hasMore,
+      isLoadingMore: _isLoadingMore,
+      padding: const EdgeInsets.fromLTRB(
+        8,
+        8,
+        8,
+        80,
+      ), // Extra bottom padding for FAB
     );
   }
 
@@ -204,8 +257,18 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
     // Calculate columns: 2 for tablets (800-1200px), 3 for larger screens
     final crossAxisCount = screenWidth >= 1200 ? 3 : 2;
 
-    return GridView.builder(
-      itemCount: _branches.length,
+    return LazyLoadListView<GitHubBranch>(
+      items: _branches,
+      itemBuilder: (context, branch, index) {
+        return BranchCard(
+          branch: branch,
+          owner: widget.owner,
+          repoName: widget.repoName,
+        );
+      },
+      loadMore: _loadMoreBranches,
+      hasMore: _hasMore,
+      isLoadingMore: _isLoadingMore,
       padding: const EdgeInsets.fromLTRB(
         8,
         8,
@@ -218,14 +281,6 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
         mainAxisSpacing: 8,
         childAspectRatio: 2.5,
       ),
-      itemBuilder: (context, index) {
-        final branch = _branches[index];
-        return BranchCard(
-          branch: branch,
-          owner: widget.owner,
-          repoName: widget.repoName,
-        );
-      },
     );
   }
 }
