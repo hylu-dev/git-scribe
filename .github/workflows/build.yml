@@ -49,11 +49,16 @@ jobs:
       - name: Build Release Artifact
         run: flutter build linux --release --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
+      - name: Package Artifact
+        run: |
+          mkdir -p dist/gitscribe-linux
+          cp -r build/linux/x64/release/bundle/* dist/gitscribe-linux/
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-release
-          path: build/linux/x64/release/bundle
+          path: dist/gitscribe-linux
 
   build_windows:
     name: Build Windows
@@ -78,11 +83,17 @@ jobs:
       - name: Build Release Artifact
         run: flutter build windows --release --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
+      - name: Package Artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/gitscribe-windows
+          Copy-Item -Path build/windows/x64/runner/Release/* -Destination dist/gitscribe-windows -Recurse -Force
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: build/windows/x64/runner/Release/*.exe
+          path: dist/gitscribe-windows
 
   build_macos:
     name: Build macOS
@@ -107,8 +118,13 @@ jobs:
       - name: Build Release Artifact
         run: flutter build macos --release --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
+      - name: Package Artifact
+        run: |
+          mkdir -p dist/gitscribe-macos
+          cp -r build/macos/Build/Products/Release/*.app dist/gitscribe-macos/
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-release
-          path: build/macos/Build/Products/Release/*.app
+          path: dist/gitscribe-macos
