@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Fira Code', 'Roboto Mono', 'Courier New', monospace;
             display: flex;
@@ -22,6 +24,7 @@
             background: #121212;
             color: #E0E0E0;
         }
+
         .container {
             background: #1E1E1E;
             padding: 3rem;
@@ -32,6 +35,7 @@
             width: 90%;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .error-icon {
             width: 80px;
             height: 80px;
@@ -43,6 +47,7 @@
             justify-content: center;
             border: 2px solid rgba(207, 102, 121, 0.5);
         }
+
         .error-icon::before {
             content: '✕';
             color: #CF6679;
@@ -50,6 +55,7 @@
             font-weight: bold;
             line-height: 1;
         }
+
         h1 {
             font-size: 1.75rem;
             margin-bottom: 0.5rem;
@@ -57,12 +63,14 @@
             font-weight: 600;
             letter-spacing: -0.5px;
         }
+
         p {
             color: rgba(224, 224, 224, 0.7);
             font-size: 1rem;
             line-height: 1.6;
             margin-bottom: 0.5rem;
         }
+
         .error-message {
             margin-top: 1.5rem;
             padding: 1rem;
@@ -71,23 +79,27 @@
             border: 1px solid rgba(207, 102, 121, 0.3);
             text-align: left;
         }
+
         .error-message-title {
             font-size: 0.875rem;
             color: #CF6679;
             font-weight: 600;
             margin-bottom: 0.5rem;
         }
+
         .error-message-text {
             font-size: 0.875rem;
             color: rgba(207, 102, 121, 0.9);
             line-height: 1.5;
             word-break: break-word;
         }
+
         .close-hint {
             margin-top: 1.5rem;
             font-size: 0.875rem;
             color: rgba(224, 224, 224, 0.5);
         }
+
         .app-name {
             font-size: 0.875rem;
             color: rgba(187, 134, 252, 0.8);
@@ -96,18 +108,16 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="error-icon"></div>
         <h1>Authentication Failed</h1>
-        <p>There was an error during authentication.</p>
         <div class="error-message">
             <div class="error-message-title">Error Details</div>
             <div class="error-message-text">{{ERROR_MESSAGE}}</div>
         </div>
-        <div class="app-name">GitScribe</div>
-        <p class="close-hint">You can close this window and try again.</p>
     </div>
 </body>
-</html>
 
+</html>
