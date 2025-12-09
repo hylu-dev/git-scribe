@@ -59,6 +59,7 @@ jobs:
         with:
           name: linux-release
           path: dist/gitscribe-linux
+          retention-days: 7
 
   build_windows:
     name: Build Windows
@@ -94,6 +95,7 @@ jobs:
         with:
           name: windows-release
           path: dist/gitscribe-windows
+          retention-days: 7
 
   build_macos:
     name: Build macOS
@@ -128,3 +130,4 @@ jobs:
         with:
           name: macos-release
           path: dist/gitscribe-macos
+          retention-days: 7
