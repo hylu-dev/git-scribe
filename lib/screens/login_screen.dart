@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../widgets/common/github_login_button.dart';
 import '../widgets/common/toast.dart';
+import '../widgets/common/app_logo.dart';
 
 /// Login screen that shows login button when not authenticated
 class LoginScreen extends StatelessWidget {
@@ -15,7 +16,15 @@ class LoginScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('GitScribe', style: Theme.of(context).textTheme.headlineLarge),
+            const AppLogo(
+              width: 120,
+              height: 120,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'GitScribe',
+              style: Theme.of(context).textTheme.headlineLarge,
+            ),
             const SizedBox(height: 8),
             Text(
               'AI-powered GitHub branch analysis',
