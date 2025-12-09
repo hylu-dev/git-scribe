@@ -4,6 +4,7 @@ import '../../services/auth_service.dart';
 import '../modals/theme_selector.dart';
 import 'breadcrumbs.dart';
 import '../modals/options_modal.dart';
+import '../common/app_logo.dart';
 
 /// Shared header component for authenticated screens
 class AppHeader extends StatefulWidget {
@@ -30,7 +31,7 @@ class _AppHeaderState extends State<AppHeader> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              // App title (clickable to go to repository screen)
+              // App logo and title (clickable to go to repository screen)
               InkWell(
                 onTap: () => context.goNamed('home'),
                 borderRadius: BorderRadius.circular(4),
@@ -39,11 +40,21 @@ class _AppHeaderState extends State<AppHeader> {
                     horizontal: 8,
                     vertical: 4,
                   ),
-                  child: Text(
-                    'GitScribe',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const AppLogo(
+                        width: 32,
+                        height: 32,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'GitScribe',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
