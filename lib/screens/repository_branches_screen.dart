@@ -6,7 +6,6 @@ import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/cards/branch_card.dart';
 import '../widgets/common/refresh_button.dart';
-import '../widgets/common/toast.dart';
 
 /// Screen that displays branches for a repository
 class RepositoryBranchesScreen extends StatefulWidget {
@@ -54,27 +53,18 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       });
     } catch (e) {
       final errorMessage = e.toString();
-      
+
       // Check if it's a token-related error
       if (errorMessage.contains('No GitHub access token') ||
           errorMessage.contains('Unauthorized') ||
           errorMessage.contains('sign in again')) {
-        // Show toast and redirect to login
+        // Redirect directly to login without showing error
         if (mounted) {
-          Toast.error(
-            context,
-            'Please sign in to access repository branches',
-          );
-          // Redirect to login after a brief delay to allow toast to show
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              context.go('/login');
-            }
-          });
+          context.go('/login');
         }
         return;
       }
-      
+
       // For other errors, show the error message as before
       setState(() {
         _errorMessage = errorMessage;
@@ -161,7 +151,9 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
             Icon(
               Icons.account_tree_outlined,
               size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -192,7 +184,12 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   Widget _buildMobileBranchesList() {
     return ListView.builder(
       itemCount: _branches.length,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 80), // Extra bottom padding for FAB
+      padding: const EdgeInsets.fromLTRB(
+        8,
+        8,
+        8,
+        80,
+      ), // Extra bottom padding for FAB
       itemBuilder: (context, index) {
         final branch = _branches[index];
         return BranchCard(
@@ -211,7 +208,12 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
 
     return GridView.builder(
       itemCount: _branches.length,
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 80), // Extra bottom padding for FAB
+      padding: const EdgeInsets.fromLTRB(
+        8,
+        8,
+        8,
+        80,
+      ), // Extra bottom padding for FAB
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 8,
