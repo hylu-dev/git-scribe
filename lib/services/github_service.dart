@@ -21,7 +21,8 @@ class GitHubService {
 
   /// Fetch repositories for the authenticated user (paginated)
   /// Returns a list of repositories sorted by most recently updated.
-  /// Uses `visibility=all` to fetch all repositories the user can see.
+  /// Includes repositories owned by the user, repositories where the user is a
+  /// collaborator, and repositories the user has access to through organization membership.
   /// Results are cached for 5 minutes.
   Future<List<GitHubRepository>> getUserRepositories({
     String? sort = 'updated',
@@ -45,9 +46,13 @@ class GitHubService {
     }
 
     try {
+      // Include affiliation parameter to get repos from organizations
+      // owner: Repositories owned by the user
+      // collaborator: Repositories the user is a collaborator on
+      // organization_member: Repositories the user has access to through organization membership
       final response = await http.get(
         Uri.parse(
-          '$_baseUrl/user/repos?sort=$sort&direction=$direction&per_page=$perPage&page=$page&visibility=all',
+          '$_baseUrl/user/repos?sort=$sort&direction=$direction&per_page=$perPage&page=$page&visibility=all&affiliation=owner,collaborator,organization_member',
         ),
         headers: {
           'Authorization': 'Bearer $token',

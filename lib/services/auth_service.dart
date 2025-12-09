@@ -23,7 +23,7 @@ class AuthService {
         await Supabase.instance.client.auth.signInWithOAuth(
           OAuthProvider.github,
           redirectTo: redirectTo,
-          scopes: 'repo gist notifications',
+          scopes: 'repo read:org',
         );
         return true;
       } else if (_isDesktop()) {
