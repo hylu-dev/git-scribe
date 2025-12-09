@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen>
       });
     } catch (e) {
       final errorMessage = e.toString();
-
+      
       // Check if it's a token-related error
       if (errorMessage.contains('No GitHub access token') ||
           errorMessage.contains('Unauthorized') ||
@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen>
         }
         return;
       }
-
+      
       // For other errors, show the error message as before
       setState(() {
         _errorMessage = errorMessage;
@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen>
       return repos;
     } catch (e) {
       final errorMessage = e.toString();
-
+      
       // Check if it's a token-related error
       if (errorMessage.contains('No GitHub access token') ||
           errorMessage.contains('Unauthorized') ||
@@ -140,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen>
         }
         return [];
       }
-
+      
       // For other errors, show the error message
       setState(() {
         _errorMessage = errorMessage;

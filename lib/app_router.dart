@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/auth_service.dart';
 import 'screens/login_screen.dart';
-import 'screens/logged_in_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/repository_branches_screen.dart';
 import 'screens/branch_comparison_screen.dart';
 
@@ -93,7 +93,7 @@ class AppRouter {
       GoRoute(
         path: '/home',
         name: 'home',
-        builder: (context, state) => const LoggedInScreen(),
+        builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
         path: '/repo/:owner/:name',
