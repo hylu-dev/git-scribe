@@ -1,32 +1,114 @@
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_service.dart';
+import 'oauth_callback_server.dart';
 
 /// Service for handling authentication
 class AuthService {
   static final SupabaseClient _supabase = SupabaseService.client;
+  OAuthCallbackServer? _callbackServer;
 
   /// Sign in with GitHub using OAuth
   /// Returns true if the OAuth flow was initiated successfully
   Future<bool> signInWithGitHub() async {
     try {
       String? redirectTo;
+
       if (kIsWeb) {
         // For web, use the current origin to ensure correct redirect
         // This will work for both localhost and production (Netlify)
         redirectTo = '${Uri.base.origin}/auth/callback';
+
+        await Supabase.instance.client.auth.signInWithOAuth(
+          OAuthProvider.github,
+          redirectTo: redirectTo,
+          scopes: 'repo gist notifications',
+        );
+        return true;
+      } else if (_isDesktop()) {
+        // For desktop, use a local HTTP server
+        return await _signInWithGitHubDesktop();
       } else {
+        // For mobile, use deep link
         redirectTo = _getRedirectUrl();
+
+        await Supabase.instance.client.auth.signInWithOAuth(
+          OAuthProvider.github,
+          redirectTo: redirectTo,
+          scopes: 'repo gist notifications',
+        );
+        return true;
       }
-      
+    } catch (e) {
+      throw Exception('Failed to initiate GitHub login: $e');
+    }
+  }
+
+  /// Sign in with GitHub on desktop using local HTTP server
+  Future<bool> _signInWithGitHubDesktop() async {
+    try {
+      // Start the callback server
+      _callbackServer = OAuthCallbackServer();
+      final serverResult = await _callbackServer!.startServer();
+      final redirectTo = serverResult.callbackUrl;
+      final callbackFuture = serverResult.callbackFuture;
+
+      // Initiate OAuth flow
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.github,
         redirectTo: redirectTo,
         scopes: 'repo gist notifications',
       );
+
+      // Wait for the callback
+      final params = await callbackFuture.timeout(
+        const Duration(minutes: 5),
+        onTimeout: () {
+          throw Exception('OAuth callback timeout');
+        },
+      );
+
+      // Check for errors in the callback
+      if (params.containsKey('error')) {
+        throw Exception(
+          'OAuth error: ${params['error']} - ${params['error_description'] ?? 'Unknown error'}',
+        );
+      }
+
+      // Process the callback - Supabase needs the full URL to process the session
+      final callbackUrl = Uri(
+        scheme: 'http',
+        host: '127.0.0.1',
+        port: _callbackServer!.port,
+        path: '/auth/callback',
+        queryParameters: params,
+      );
+
+      // Exchange the code for a session
+      await _supabase.auth.getSessionFromUrl(callbackUrl);
+
+      // Stop the server
+      await _callbackServer!.stopServer();
+      _callbackServer = null;
+
       return true;
     } catch (e) {
-      throw Exception('Failed to initiate GitHub login: $e');
+      // Clean up server on error
+      await _callbackServer?.stopServer();
+      _callbackServer = null;
+      rethrow;
+    }
+  }
+
+  /// Check if running on desktop platform
+  bool _isDesktop() {
+    if (kIsWeb) return false;
+    try {
+      return Platform.isLinux || Platform.isMacOS || Platform.isWindows;
+    } catch (e) {
+      // Platform class not available (e.g., on web)
+      return false;
     }
   }
 

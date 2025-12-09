@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Successful - GitScribe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fira Code', 'Roboto Mono', 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #121212;
+            color: #E0E0E0;
+        }
+
+        .container {
+            background: #1E1E1E;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: rgba(103, 80, 164, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s ease-out;
+            border: 2px solid rgba(103, 80, 164, 0.5);
+        }
+
+        .success-icon::before {
+            content: '✓';
+            color: #BB86FC;
+            font-size: 48px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: #E0E0E0;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            color: rgba(224, 224, 224, 0.7);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .close-hint {
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: rgba(224, 224, 224, 0.5);
+        }
+
+        .app-name {
+            font-size: 0.875rem;
+            color: rgba(187, 134, 252, 0.8);
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="success-icon"></div>
+        <h1>Authentication Successful!</h1>
+        <p>You have successfully authenticated with GitHub.</p>
+        <p>You can close this window and return to GitScribe.</p>
+        <div class="app-name">GitScribe</div>
+    </div>
+</body>
+
+</html>
