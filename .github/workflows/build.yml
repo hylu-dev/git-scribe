@@ -1,0 +1,79 @@
+name: Desktop CI Build (Manual Select)
+
+on:
+  # Uncomment the following lines to enable automatic running on push/PR
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
+    
+  workflow_dispatch:
+    inputs:
+      os_to_build:
+        description: 'Select OS(es) to build'
+        required: true
+        type: choice
+        # The options must be valid JSON arrays (as strings)
+        options:
+          - '["linux", "windows", "macos"]'
+          - '["windows"]'
+          - '["macos"]'
+          - '["linux"]'
+
+jobs:
+  build_desktop:
+    name: Build on ${{ matrix.os }}
+    
+    # Use fromJSON to convert the string choice into a proper matrix array
+    strategy:
+      matrix:
+        # matrix.os will be an array of selected OS identifiers (e.g., ["windows", "macos"])
+        os: ${{ fromJSON(github.event.inputs.os_to_build) }}
+    
+    # The runner OS is dynamically determined by appending '-latest'
+    # Note: 'linux' maps to 'ubuntu-latest' since GitHub Actions uses ubuntu runners
+    runs-on: ${{ matrix.os == 'linux' && 'ubuntu-latest' || format('{0}-latest', matrix.os) }}
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      # 1. Setup Flutter SDK
+      - name: Setup Flutter Environment
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+          
+      - name: Get Dependencies
+        run: flutter pub get
+        
+      # 2. Linux-specific setup (crucial for building GTK runner)
+      - name: Install Linux Build Dependencies
+        # Only runs if the selected OS identifier is 'linux'
+        if: matrix.os == 'linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev 
+          
+      # 3. Execute the Platform-Specific Build
+      - name: Build Release Artifact
+        run: |
+          # Use the OS identifier to run the correct build command
+          if [ "${{ matrix.os }}" = "linux" ]; then
+            flutter build linux --release
+          elif [ "${{ matrix.os }}" = "windows" ]; then
+            flutter build windows --release
+          elif [ "${{ matrix.os }}" = "macos" ]; then
+            flutter build macos --release
+          fi
+
+      # 4. Upload the Build Artifacts
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-release
+          path: |
+            build/windows/runner/Release/*.exe
+            build/macos/Build/Products/Release/*.app
+            build/linux/x64/release/bundle
