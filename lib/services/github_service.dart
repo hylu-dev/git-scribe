@@ -123,19 +123,20 @@ class GitHubService {
     }
   }
 
-  /// Fetch all branches for a repository
+  /// Fetch branches for a repository (paginated)
   /// Returns a list of branches for the given owner and repository
   /// Includes commit details (message, author, date) for each branch
-  /// Results are cached for 5 minutes.
+  /// Results are cached for 5 minutes (first page only).
   Future<List<GitHubBranch>> getRepositoryBranches(
     String owner,
     String repo, {
-    int perPage = 100,
+    int page = 1,
+    int perPage = 10,
     bool forceRefresh = false,
   }) async {
-    // Check cache first
-    if (!forceRefresh) {
-      final cacheKey = 'branches:$owner:$repo:$perPage';
+    // Check cache first (only for first page)
+    if (page == 1 && !forceRefresh) {
+      final cacheKey = 'branches:$owner:$repo:$page:$perPage';
       final cached = _cache.get<List<GitHubBranch>>(cacheKey);
       if (cached != null) {
         return cached;
@@ -150,7 +151,9 @@ class GitHubService {
     try {
       // Fetch branches with commit details
       final response = await http.get(
-        Uri.parse('$_baseUrl/repos/$owner/$repo/branches?per_page=$perPage'),
+        Uri.parse(
+          '$_baseUrl/repos/$owner/$repo/branches?per_page=$perPage&page=$page',
+        ),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/vnd.github.v3+json',
@@ -199,9 +202,11 @@ class GitHubService {
         // Wait for all branches to be processed
         branches.addAll(await Future.wait(branchFutures));
 
-        // Cache the results
-        final cacheKey = 'branches:$owner:$repo:$perPage';
-        _cache.set(cacheKey, branches, ttl: const Duration(minutes: 5));
+        // Cache first page only
+        if (page == 1) {
+          final cacheKey = 'branches:$owner:$repo:$page:$perPage';
+          _cache.set(cacheKey, branches, ttl: const Duration(minutes: 5));
+        }
 
         return branches;
       } else if (response.statusCode == 401) {
