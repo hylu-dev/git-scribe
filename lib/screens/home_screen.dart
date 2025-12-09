@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../services/github_service.dart';
 import '../models/github_repository.dart';
+import '../services/github_access_guard.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/cards/repository_card.dart';
@@ -53,6 +53,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _loadRepositories({bool forceRefresh = false}) async {
+    if (!GitHubAccessGuard.ensureAccess(
+      context,
+      mounted: mounted,
+      showMessage: true,
+      message: 'Please sign in to access your repositories',
+    )) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -88,18 +97,7 @@ class _HomeScreenState extends State<HomeScreen>
       });
     } catch (e) {
       final errorMessage = e.toString();
-      
-      // Check if it's a token-related error
-      if (errorMessage.contains('No GitHub access token') ||
-          errorMessage.contains('Unauthorized') ||
-          errorMessage.contains('sign in again')) {
-        // Redirect directly to login without messaging
-        if (mounted) {
-          context.go('/login');
-        }
-        return;
-      }
-      
+
       // For other errors, show the error message as before
       setState(() {
         _errorMessage = errorMessage;
@@ -110,6 +108,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<List<GitHubRepository>> _loadMoreRepositories(int page) async {
+    if (!GitHubAccessGuard.ensureAccess(
+      context,
+      mounted: mounted,
+      showMessage: true,
+      message: 'Please sign in to access your repositories',
+    )) {
+      return [];
+    }
+
     setState(() {
       _isLoadingMore = true;
     });
@@ -129,18 +136,7 @@ class _HomeScreenState extends State<HomeScreen>
       return repos;
     } catch (e) {
       final errorMessage = e.toString();
-      
-      // Check if it's a token-related error
-      if (errorMessage.contains('No GitHub access token') ||
-          errorMessage.contains('Unauthorized') ||
-          errorMessage.contains('sign in again')) {
-        // Redirect directly to login without messaging
-        if (mounted) {
-          context.go('/login');
-        }
-        return [];
-      }
-      
+
       // For other errors, show the error message
       setState(() {
         _errorMessage = errorMessage;

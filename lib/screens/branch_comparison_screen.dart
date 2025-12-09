@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:intl/intl.dart';
-import 'package:go_router/go_router.dart';
 import '../services/github_service.dart';
 import '../services/ai_service.dart';
 import '../services/branch_summary_service.dart';
+import '../services/github_access_guard.dart';
 import '../models/github_comparison.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
@@ -52,6 +52,15 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   }
 
   Future<void> _loadComparison({bool forceRefresh = false}) async {
+    if (!GitHubAccessGuard.ensureAccess(
+      context,
+      mounted: mounted,
+      showMessage: true,
+      message: 'Please sign in to access branch comparison',
+    )) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -83,27 +92,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
       _loadCachedSummary();
     } catch (e) {
       final errorMessage = e.toString();
-      
-      // Check if it's a token-related error
-      if (errorMessage.contains('No GitHub access token') ||
-          errorMessage.contains('Unauthorized') ||
-          errorMessage.contains('sign in again')) {
-        // Show toast and redirect to login
-        if (mounted) {
-          Toast.error(
-            context,
-            'Please sign in to access branch comparison',
-          );
-          // Redirect to login after a brief delay to allow toast to show
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              context.go('/login');
-            }
-          });
-        }
-        return;
-      }
-      
+
       // For other errors, show the error message as before
       setState(() {
         _errorMessage = errorMessage;

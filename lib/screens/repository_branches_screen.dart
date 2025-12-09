@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../services/github_access_guard.dart';
 import '../services/github_service.dart';
 import '../models/github_branch.dart';
 import '../widgets/navigation/app_header.dart';
@@ -36,6 +36,15 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   }
 
   Future<void> _loadBranches({bool forceRefresh = false}) async {
+    if (!GitHubAccessGuard.ensureAccess(
+      context,
+      mounted: mounted,
+      showMessage: true,
+      message: 'Please sign in to access repository branches',
+    )) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -53,17 +62,6 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       });
     } catch (e) {
       final errorMessage = e.toString();
-
-      // Check if it's a token-related error
-      if (errorMessage.contains('No GitHub access token') ||
-          errorMessage.contains('Unauthorized') ||
-          errorMessage.contains('sign in again')) {
-        // Redirect directly to login without showing error
-        if (mounted) {
-          context.go('/login');
-        }
-        return;
-      }
 
       // For other errors, show the error message as before
       setState(() {
