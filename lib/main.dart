@@ -40,8 +40,12 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // Listen to theme changes (add listener before initializing themes)
     _themeModel.addListener(_onThemeChanged);
-    // Initialize with programming themes (this will auto-select first theme)
-    _themeModel.initializeThemes(Themes.all);
+    // Initialize with programming themes and load saved theme
+    _initializeThemes();
+  }
+
+  Future<void> _initializeThemes() async {
+    await _themeModel.initializeThemes(Themes.all);
   }
 
   @override

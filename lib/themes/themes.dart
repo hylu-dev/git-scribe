@@ -7,14 +7,14 @@ class Themes {
   /// Flutter Default theme - Flutter's default Material 3 dark theme
   static AppTheme get flutterDefault => AppTheme(
     name: 'Default',
-    description: 'Flutter\'s default Material 3 dark theme',
+    description: 'Default Material 3 dark theme',
     theme: _buildFlutterDefault(),
   );
 
   /// Flutter Light theme - Flutter's default Material 3 light theme
   static AppTheme get flutterLight => AppTheme(
     name: 'Light',
-    description: 'Flutter\'s default Material 3 light theme',
+    description: 'Default Material 3 light theme',
     theme: _buildFlutterLight(),
   );
 
