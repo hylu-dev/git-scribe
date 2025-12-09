@@ -38,6 +38,24 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
     _loadBranches();
   }
 
+  /// Sort branches by most recent commit date (descending)
+  void _sortBranchesByCommitDate() {
+    _branches.sort((a, b) {
+      // Branches with no commit date go to the end
+      if (a.commitDate == null && b.commitDate == null) {
+        return 0;
+      }
+      if (a.commitDate == null) {
+        return 1; // a goes after b
+      }
+      if (b.commitDate == null) {
+        return -1; // a goes before b
+      }
+      // Most recent first (descending order)
+      return b.commitDate!.compareTo(a.commitDate!);
+    });
+  }
+
   Future<void> _loadBranches({bool forceRefresh = false}) async {
     if (!GitHubAccessGuard.ensureAccess(
       context,
@@ -67,6 +85,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
       );
       setState(() {
         _branches = branches;
+        _sortBranchesByCommitDate();
         _isLoading = false;
         _hasMore = branches.length == 10; // If we got 10, there might be more
       });
@@ -105,6 +124,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
 
       setState(() {
         _branches.addAll(branches);
+        _sortBranchesByCommitDate();
         _hasMore = branches.length == 10; // If we got 10, there might be more
         _isLoadingMore = false;
       });

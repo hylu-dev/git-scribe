@@ -207,6 +207,22 @@ class GitHubService {
         // Wait for all branches to be processed
         branches.addAll(await Future.wait(branchFutures));
 
+        // Sort branches by most recent commit date (descending)
+        branches.sort((a, b) {
+          // Branches with no commit date go to the end
+          if (a.commitDate == null && b.commitDate == null) {
+            return 0;
+          }
+          if (a.commitDate == null) {
+            return 1; // a goes after b
+          }
+          if (b.commitDate == null) {
+            return -1; // a goes before b
+          }
+          // Most recent first (descending order)
+          return b.commitDate!.compareTo(a.commitDate!);
+        });
+
         // Cache first page only
         if (page == 1) {
           final cacheKey = 'branches:$owner:$repo:$page:$perPage';
