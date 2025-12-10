@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/pr_gen.iml" filepath="$PROJECT_DIR$/pr_gen.iml" />
-      <module fileurl="file://$PROJECT_DIR$/android/pr_gen_android.iml" filepath="$PROJECT_DIR$/android/pr_gen_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gitscribe.iml" filepath="$PROJECT_DIR$/gitscribe.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/gitscribe_android.iml" filepath="$PROJECT_DIR$/android/gitscribe_android.iml" />
     </modules>
   </component>
 </project>
