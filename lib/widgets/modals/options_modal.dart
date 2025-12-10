@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/ai_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/github_access_guard.dart';
 import '../common/toast.dart';
 
 /// Modal dialog for app options including AI provider config and logout
@@ -27,6 +28,7 @@ class _OptionsModalState extends State<OptionsModal> {
   bool _isLoading = false;
   bool _isTesting = false;
   bool _obscureApiKey = true;
+  bool _isRequestingOrgAccess = false;
   String? _errorMessage;
   String? _testResult;
 
@@ -42,12 +44,14 @@ class _OptionsModalState extends State<OptionsModal> {
       // Load saved API key for the selected provider
       final savedApiKey = await _aiService.getSavedApiKey(_selectedProvider!);
       _apiKeyController.text = savedApiKey ?? _aiService.apiKey ?? '';
-      
+
       // Load Ollama base URL if applicable
       if (_selectedProvider == AIProviderType.ollama) {
         final savedBaseUrl = await _aiService.getSavedBaseUrl();
         _ollamaBaseUrlController.text =
-            savedBaseUrl ?? _aiService.ollamaBaseUrl ?? 'http://localhost:11434';
+            savedBaseUrl ??
+            _aiService.ollamaBaseUrl ??
+            'http://localhost:11434';
       }
     } else {
       // Fallback to current service values
@@ -226,7 +230,7 @@ class _OptionsModalState extends State<OptionsModal> {
     if (confirmed == true && mounted) {
       try {
         await _aiService.clearSavedConfiguration();
-        
+
         // Clear the form fields
         _apiKeyController.clear();
         _ollamaBaseUrlController.text = 'http://localhost:11434';
@@ -237,10 +241,7 @@ class _OptionsModalState extends State<OptionsModal> {
         });
 
         if (mounted) {
-          Toast.success(
-            context,
-            'All saved API keys have been cleared',
-          );
+          Toast.success(context, 'All saved API keys have been cleared');
         }
       } catch (e) {
         if (mounted) {
@@ -248,6 +249,48 @@ class _OptionsModalState extends State<OptionsModal> {
             _errorMessage = 'Failed to clear saved keys: $e';
           });
         }
+      }
+    }
+  }
+
+  Future<void> _handleRequestOrganizationAccess() async {
+    if (!GitHubAccessGuard.ensureAccess(
+      context,
+      mounted: mounted,
+      showMessage: true,
+      message: 'Please sign in to request organization access',
+    )) {
+      return;
+    }
+
+    setState(() {
+      _isRequestingOrgAccess = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final granted = await _authService.requestOrganizationAccess();
+      if (mounted) {
+        setState(() {
+          _isRequestingOrgAccess = false;
+        });
+        if (granted) {
+          Navigator.of(context).pop(); // Close options modal
+          Toast.success(
+            context,
+            'Organization access updated. Please refresh your repositories.',
+          );
+        } else {
+          // User cancelled - just reset state, don't show error
+          // Modal stays open so user can try again if they want
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to request organization access: $e';
+          _isRequestingOrgAccess = false;
+        });
       }
     }
   }
@@ -479,6 +522,43 @@ class _OptionsModalState extends State<OptionsModal> {
                 ),
               ),
             ],
+            // Divider before GitHub section
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            // GitHub Section
+            Text(
+              'GitHub',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: (_isLoading || _isTesting || _isRequestingOrgAccess)
+                  ? null
+                  : _handleRequestOrganizationAccess,
+              icon: _isRequestingOrgAccess
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.business),
+              label: Text(
+                _isRequestingOrgAccess
+                    ? 'Opening GitHub...'
+                    : 'Request Organization Access',
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Open GitHub\'s authorization page to approve or request access to organizations',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             // Divider before logout section
             const SizedBox(height: 24),
             const Divider(),

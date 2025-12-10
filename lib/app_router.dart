@@ -87,7 +87,7 @@ class AppRouter {
         builder: (context, state) {
           // Handle OAuth callback - Supabase will automatically process the session
           // This screen will show a loading indicator while processing
-          return const _AuthCallbackScreen();
+          return _AuthCallbackScreen(uri: state.uri);
         },
       ),
       GoRoute(
@@ -135,7 +135,8 @@ class AppRouter {
 /// Screen that handles OAuth callback
 /// Supabase automatically processes the session from URL parameters
 class _AuthCallbackScreen extends StatefulWidget {
-  const _AuthCallbackScreen();
+  final Uri uri;
+  const _AuthCallbackScreen({required this.uri});
 
   @override
   State<_AuthCallbackScreen> createState() => _AuthCallbackScreenState();
