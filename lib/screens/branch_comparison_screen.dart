@@ -270,20 +270,29 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
                 ),
                 const VerticalDivider(width: 1),
                 // Right column: AI Summary and File Changes
-                SizedBox(
-                  width: 800,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildAISummarySection(showDivider: false),
-                        if (_selectedCommit != null) ...[
-                          const SizedBox(height: 24),
-                          _buildFileChangesSection(),
-                        ],
-                      ],
-                    ),
-                  ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final maxWidth = screenWidth / 1.7;
+                    const minWidth = 300.0;
+                    final width = maxWidth.clamp(minWidth, maxWidth);
+
+                    return SizedBox(
+                      width: width,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildAISummarySection(showDivider: false),
+                            if (_selectedCommit != null) ...[
+                              const SizedBox(height: 24),
+                              _buildFileChangesSection(),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
