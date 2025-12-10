@@ -23,7 +23,7 @@ class AuthService {
         await Supabase.instance.client.auth.signInWithOAuth(
           OAuthProvider.github,
           redirectTo: redirectTo,
-          scopes: 'repo gist notifications',
+          scopes: 'repo read:org',
         );
         return true;
       } else if (_isDesktop()) {
@@ -165,4 +165,111 @@ class AuthService {
   /// Note: The provider token is only available if Supabase is configured
   /// to store it. Check your Supabase Dashboard settings.
   String? get providerToken => _supabase.auth.currentSession?.providerToken;
+
+  /// Request organization access by triggering GitHub's OAuth authorization page
+  /// This will show GitHub's native interface where users can approve/request
+  /// access to organizations
+  /// Returns true if access was granted, false if user cancelled
+  Future<bool> requestOrganizationAccess() async {
+    try {
+      String? redirectTo;
+
+      if (kIsWeb) {
+        redirectTo = '${Uri.base.origin}/auth/callback';
+
+        await Supabase.instance.client.auth.signInWithOAuth(
+          OAuthProvider.github,
+          redirectTo: redirectTo,
+          scopes: 'repo read:org',
+          // Force re-authorization to show organization selection
+          queryParams: {
+            'prompt': 'consent', // Force showing the authorization page
+          },
+        );
+        return true;
+      } else if (_isDesktop()) {
+        return await _requestOrgAccessDesktop();
+      } else {
+        redirectTo = _getRedirectUrl();
+
+        await Supabase.instance.client.auth.signInWithOAuth(
+          OAuthProvider.github,
+          redirectTo: redirectTo,
+          scopes: 'repo read:org',
+          queryParams: {
+            'prompt': 'consent', // Force showing the authorization page
+          },
+        );
+        return true;
+      }
+    } catch (e) {
+      throw Exception('Failed to request organization access: $e');
+    }
+  }
+
+  /// Request organization access on desktop
+  Future<bool> _requestOrgAccessDesktop() async {
+    try {
+      // Start the callback server
+      _callbackServer = OAuthCallbackServer();
+      final serverResult = await _callbackServer!.startServer();
+      final redirectTo = serverResult.callbackUrl;
+      final callbackFuture = serverResult.callbackFuture;
+
+      // Initiate OAuth flow with prompt=consent to show authorization page
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.github,
+        redirectTo: redirectTo,
+        scopes: 'repo read:org',
+        queryParams: {
+          'prompt': 'consent', // Force showing the authorization page
+        },
+      );
+
+      // Wait for the callback
+      final params = await callbackFuture.timeout(
+        const Duration(minutes: 5),
+        onTimeout: () {
+          throw Exception('OAuth callback timeout');
+        },
+      );
+
+      // Check for errors in the callback
+      if (params.containsKey('error')) {
+        final error = params['error'];
+        // If user cancelled (access_denied), return false instead of throwing
+        if (error == 'access_denied') {
+          await _callbackServer?.stopServer();
+          _callbackServer = null;
+          return false; // User cancelled, not an error
+        }
+        throw Exception(
+          'OAuth error: $error - ${params['error_description'] ?? 'Unknown error'}',
+        );
+      }
+
+      // Process the callback - Supabase needs the full URL to process the session
+      final callbackUrl = Uri(
+        scheme: 'http',
+        host: '127.0.0.1',
+        port: _callbackServer!.port,
+        path: '/auth/callback',
+        queryParameters: params,
+      );
+
+      // Exchange the code for a session
+      await _supabase.auth.getSessionFromUrl(callbackUrl);
+
+      // Stop the server
+      await _callbackServer!.stopServer();
+      _callbackServer = null;
+
+      return true;
+    } catch (e) {
+      // Clean up server on error
+      await _callbackServer?.stopServer();
+      _callbackServer = null;
+      rethrow;
+    }
+  }
 }

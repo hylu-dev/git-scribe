@@ -21,7 +21,8 @@ class GitHubService {
 
   /// Fetch repositories for the authenticated user (paginated)
   /// Returns a list of repositories sorted by most recently updated.
-  /// Uses `visibility=all` to fetch all repositories the user can see.
+  /// Includes repositories owned by the user, repositories where the user is a
+  /// collaborator, and repositories the user has access to through organization membership.
   /// Results are cached for 5 minutes.
   Future<List<GitHubRepository>> getUserRepositories({
     String? sort = 'updated',
@@ -45,9 +46,13 @@ class GitHubService {
     }
 
     try {
+      // Include affiliation parameter to get repos from organizations
+      // owner: Repositories owned by the user
+      // collaborator: Repositories the user is a collaborator on
+      // organization_member: Repositories the user has access to through organization membership
       final response = await http.get(
         Uri.parse(
-          '$_baseUrl/user/repos?sort=$sort&direction=$direction&per_page=$perPage&page=$page&visibility=all',
+          '$_baseUrl/user/repos?sort=$sort&direction=$direction&per_page=$perPage&page=$page&visibility=all&affiliation=owner,collaborator,organization_member',
         ),
         headers: {
           'Authorization': 'Bearer $token',
@@ -123,19 +128,20 @@ class GitHubService {
     }
   }
 
-  /// Fetch all branches for a repository
+  /// Fetch branches for a repository (paginated)
   /// Returns a list of branches for the given owner and repository
   /// Includes commit details (message, author, date) for each branch
-  /// Results are cached for 5 minutes.
+  /// Results are cached for 5 minutes (first page only).
   Future<List<GitHubBranch>> getRepositoryBranches(
     String owner,
     String repo, {
-    int perPage = 100,
+    int page = 1,
+    int perPage = 10,
     bool forceRefresh = false,
   }) async {
-    // Check cache first
-    if (!forceRefresh) {
-      final cacheKey = 'branches:$owner:$repo:$perPage';
+    // Check cache first (only for first page)
+    if (page == 1 && !forceRefresh) {
+      final cacheKey = 'branches:$owner:$repo:$page:$perPage';
       final cached = _cache.get<List<GitHubBranch>>(cacheKey);
       if (cached != null) {
         return cached;
@@ -150,7 +156,9 @@ class GitHubService {
     try {
       // Fetch branches with commit details
       final response = await http.get(
-        Uri.parse('$_baseUrl/repos/$owner/$repo/branches?per_page=$perPage'),
+        Uri.parse(
+          '$_baseUrl/repos/$owner/$repo/branches?per_page=$perPage&page=$page',
+        ),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/vnd.github.v3+json',
@@ -199,9 +207,27 @@ class GitHubService {
         // Wait for all branches to be processed
         branches.addAll(await Future.wait(branchFutures));
 
-        // Cache the results
-        final cacheKey = 'branches:$owner:$repo:$perPage';
-        _cache.set(cacheKey, branches, ttl: const Duration(minutes: 5));
+        // Sort branches by most recent commit date (descending)
+        branches.sort((a, b) {
+          // Branches with no commit date go to the end
+          if (a.commitDate == null && b.commitDate == null) {
+            return 0;
+          }
+          if (a.commitDate == null) {
+            return 1; // a goes after b
+          }
+          if (b.commitDate == null) {
+            return -1; // a goes before b
+          }
+          // Most recent first (descending order)
+          return b.commitDate!.compareTo(a.commitDate!);
+        });
+
+        // Cache first page only
+        if (page == 1) {
+          final cacheKey = 'branches:$owner:$repo:$page:$perPage';
+          _cache.set(cacheKey, branches, ttl: const Duration(minutes: 5));
+        }
 
         return branches;
       } else if (response.statusCode == 401) {
