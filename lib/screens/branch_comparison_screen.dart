@@ -43,6 +43,8 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   bool _isGeneratingSummary = false;
   String? _aiSummary;
   bool _isSummaryExpanded = false;
+  int _summaryKey =
+      0; // Key to force ExpansionTile rebuild when summary is generated
   GitHubCommit? _selectedCommit; // Selected commit in wide mode
 
   // Layout constants
@@ -352,6 +354,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
             ),
           ),
           child: ExpansionTile(
+            key: ValueKey('ai_summary_$_summaryKey'),
             initiallyExpanded: _isSummaryExpanded,
             onExpansionChanged: (expanded) {
               setState(() {
@@ -482,6 +485,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
           _isGeneratingSummary = false;
           // Auto-expand when generating a new summary
           _isSummaryExpanded = true;
+          _summaryKey++; // Force ExpansionTile to rebuild with new initiallyExpanded value
         });
       }
     } catch (e) {
