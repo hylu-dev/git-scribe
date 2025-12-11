@@ -23,7 +23,9 @@ class _AppHeaderState extends State<AppHeader> {
     final displayName = authService.userDisplayName ?? 'User';
     final avatarUrl = authService.userAvatarUrl;
     final email = authService.userEmail;
-    final showEmail = MediaQuery.of(context).size.width > 600;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final showProfile = screenWidth > 400;
+    final showEmail = screenWidth > 600;
 
     return Column(
       children: [
@@ -58,42 +60,43 @@ class _AppHeaderState extends State<AppHeader> {
               ),
               const Spacer(),
               // User info
-              Row(
-                children: [
-                  if (avatarUrl != null)
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundImage: NetworkImage(avatarUrl),
-                    )
-                  else
-                    CircleAvatar(
-                      radius: 16,
-                      child: Text(
-                        displayName[0].toUpperCase(),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        displayName,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
+              if (showProfile) ...[
+                Row(
+                  children: [
+                    if (avatarUrl != null)
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundImage: NetworkImage(avatarUrl),
+                      )
+                    else
+                      CircleAvatar(
+                        radius: 16,
+                        child: Text(
+                          displayName[0].toUpperCase(),
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ),
-                      if (email != null && showEmail)
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         Text(
-                          email,
-                          style: Theme.of(context).textTheme.bodySmall,
+                          displayName,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
                         ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
+                        if (email != null && showEmail)
+                          Text(
+                            email,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+              ],
               // Theme selector
               IconButton(
                 icon: const Icon(Icons.palette),
