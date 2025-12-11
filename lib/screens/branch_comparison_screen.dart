@@ -364,30 +364,45 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
               Icons.auto_awesome,
               color: theme.colorScheme.onSurface,
             ),
-            title: Row(
-              children: [
-                Text(
-                  'AI Summary',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
-                _buildCopyButton(
-                  label: 'Copy Text',
-                  icon: Icons.content_copy,
-                  onPressed: () =>
-                      _copyToClipboard(_aiSummary!, isMarkdown: false),
-                ),
-                const SizedBox(width: 8),
-                _buildCopyButton(
-                  label: 'Copy Markdown',
-                  icon: Icons.code,
-                  onPressed: () =>
-                      _copyToClipboard(_aiSummary!, isMarkdown: true),
-                ),
-              ],
+            title: LayoutBuilder(
+              builder: (context, constraints) {
+                final showLabels = constraints.maxWidth > 400;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'AI Summary',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildCopyButton(
+                          label: 'Copy Text',
+                          icon: Icons.content_copy,
+                          onPressed: () =>
+                              _copyToClipboard(_aiSummary!, isMarkdown: false),
+                          showLabel: showLabels,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCopyButton(
+                          label: 'Copy Markdown',
+                          icon: Icons.code,
+                          onPressed: () =>
+                              _copyToClipboard(_aiSummary!, isMarkdown: true),
+                          showLabel: showLabels,
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
             ),
             children: [
               Padding(
@@ -409,17 +424,33 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
     required String label,
     required IconData icon,
     required VoidCallback onPressed,
+    bool showLabel = true,
   }) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 16),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        minimumSize: const Size(0, 32),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-    );
+    if (showLabel) {
+      return OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 16),
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          minimumSize: const Size(0, 32),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      );
+    } else {
+      return Tooltip(
+        message: label,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.all(12),
+            minimumSize: const Size(32, 32),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Icon(icon, size: 16),
+        ),
+      );
+    }
   }
 
   Widget _buildSummaryChip(String label, String value) {
