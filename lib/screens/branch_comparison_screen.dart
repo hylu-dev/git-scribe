@@ -13,6 +13,7 @@ import '../widgets/expansion/commit_expansion_tile.dart';
 import '../widgets/expansion/file_expansion_tile.dart';
 import '../widgets/common/toast.dart';
 import '../widgets/common/refresh_button.dart';
+import '../themes/markdown_styles.dart';
 
 /// Screen that displays branch overview with commits and file changes
 class BranchOverviewScreen extends StatefulWidget {
@@ -42,7 +43,15 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   bool _isGeneratingSummary = false;
   String? _aiSummary;
   bool _isSummaryExpanded = false;
+  int _summaryKey =
+      0; // Key to force ExpansionTile rebuild when summary is generated
   GitHubCommit? _selectedCommit; // Selected commit in wide mode
+
+  // Layout constants
+  static const double _wideLayoutBreakpoint = 800.0;
+  static const double _fabBottomPadding = 80.0;
+  static const double _rightColumnMinWidth = 300.0;
+  static const double _rightColumnMaxWidthRatio = 1.7;
 
   @override
   void initState() {
@@ -52,12 +61,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   }
 
   Future<void> _loadComparison({bool forceRefresh = false}) async {
-    if (!GitHubAccessGuard.ensureAccess(
-      context,
-      mounted: mounted,
-      showMessage: true,
-      message: 'Please sign in to access branch comparison',
-    )) {
+    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
       return;
     }
 
@@ -156,70 +160,56 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
     }
 
     if (_errorMessage != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading comparison',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadComparison,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
+      return _buildErrorState();
     }
 
     if (_comparison == null) {
       return const Center(child: Text('No comparison data available'));
     }
 
-    // Check if we should use wide layout (tablet/desktop)
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWideLayout = screenWidth >= 800;
+    final isWideLayout =
+        MediaQuery.of(context).size.width >= _wideLayoutBreakpoint;
+    return isWideLayout ? _buildWideLayout() : _buildMobileLayout();
+  }
 
-    if (isWideLayout) {
-      return _buildWideLayout();
-    } else {
-      return _buildMobileLayout();
-    }
+  Widget _buildErrorState() {
+    final theme = Theme.of(context);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
+          const SizedBox(height: 16),
+          Text('Error loading comparison', style: theme.textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadComparison,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildMobileLayout() {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        0,
-        0,
-        0,
-        80,
-      ), // Extra bottom padding for FAB
+      padding: const EdgeInsets.only(bottom: _fabBottomPadding),
       children: [
         _buildSummaryHeader(),
         const Divider(height: 1),
         _buildAISummarySection(),
-        // Commits list with nested files
         if (_comparison!.commits.isEmpty)
           const Padding(
             padding: EdgeInsets.all(32),
@@ -235,65 +225,18 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
 
   Widget _buildWideLayout() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        0,
-        0,
-        0,
-        80,
-      ), // Extra bottom padding for FAB
+      padding: const EdgeInsets.only(bottom: _fabBottomPadding),
       child: Column(
         children: [
-          // Summary header at top
           _buildSummaryHeader(),
           const Divider(height: 1),
-          // Two-column layout: Commits on left, AI Summary and File Changes on right
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left column: Commits (can expand wider)
-                Expanded(
-                  child: _comparison!.commits.isEmpty
-                      ? const Center(child: Text('No commits found'))
-                      : ListView.builder(
-                          itemCount: _comparison!.commits.length,
-                          itemBuilder: (context, index) {
-                            final commit =
-                                _comparison!.commits[_comparison!
-                                        .commits
-                                        .length -
-                                    1 -
-                                    index];
-                            return _buildWideModeCommitItem(commit);
-                          },
-                        ),
-                ),
+                Expanded(child: _buildCommitsList()),
                 const VerticalDivider(width: 1),
-                // Right column: AI Summary and File Changes
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final screenWidth = MediaQuery.of(context).size.width;
-                    final maxWidth = screenWidth / 1.7;
-                    const minWidth = 300.0;
-                    final width = maxWidth.clamp(minWidth, maxWidth);
-
-                    return SizedBox(
-                      width: width,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildAISummarySection(showDivider: false),
-                            if (_selectedCommit != null) ...[
-                              const SizedBox(height: 24),
-                              _buildFileChangesSection(),
-                            ],
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                _buildRightColumn(),
               ],
             ),
           ),
@@ -302,7 +245,46 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
     );
   }
 
+  Widget _buildCommitsList() {
+    if (_comparison!.commits.isEmpty) {
+      return const Center(child: Text('No commits found'));
+    }
+
+    final commits = _comparison!.commits.reversed.toList();
+    return ListView.builder(
+      itemCount: commits.length,
+      itemBuilder: (context, index) => _buildWideModeCommitItem(commits[index]),
+    );
+  }
+
+  Widget _buildRightColumn() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final maxWidth = screenWidth / _rightColumnMaxWidthRatio;
+        final width = maxWidth.clamp(_rightColumnMinWidth, maxWidth);
+
+        return SizedBox(
+          width: width,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildAISummarySection(showDivider: false),
+                if (_selectedCommit != null) ...[
+                  const SizedBox(height: 24),
+                  _buildFileChangesSection(),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSummaryHeader() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -310,14 +292,14 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
         children: [
           Text(
             'Branch Overview',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Base: $_baseBranch → Head: ${widget.branchName}',
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -358,136 +340,79 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
     return Column(
       children: [
         Container(
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outline.withValues(alpha: 0.2),
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
           child: ExpansionTile(
+            key: ValueKey('ai_summary_$_summaryKey'),
             initiallyExpanded: _isSummaryExpanded,
             onExpansionChanged: (expanded) {
               setState(() {
                 _isSummaryExpanded = expanded;
               });
             },
+            shape: const RoundedRectangleBorder(side: BorderSide.none),
+            collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
             leading: Icon(
               Icons.auto_awesome,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: theme.colorScheme.onSurface,
             ),
-            title: Row(
-              children: [
-                Text(
-                  'AI Summary',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      _copyToClipboard(_aiSummary!, isMarkdown: false),
-                  icon: const Icon(Icons.content_copy, size: 16),
-                  label: const Text('Copy Text'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
+            title: LayoutBuilder(
+              builder: (context, constraints) {
+                final showLabels = constraints.maxWidth > 400;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'AI Summary',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    minimumSize: const Size(0, 32),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () =>
-                      _copyToClipboard(_aiSummary!, isMarkdown: true),
-                  icon: const Icon(Icons.code, size: 16),
-                  label: const Text('Copy Markdown'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildCopyButton(
+                          label: 'Copy Text',
+                          icon: Icons.content_copy,
+                          onPressed: () =>
+                              _copyToClipboard(_aiSummary!, isMarkdown: false),
+                          showLabel: showLabels,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCopyButton(
+                          label: 'Copy Markdown',
+                          icon: Icons.code,
+                          onPressed: () =>
+                              _copyToClipboard(_aiSummary!, isMarkdown: true),
+                          showLabel: showLabels,
+                        ),
+                      ],
                     ),
-                    minimumSize: const Size(0, 32),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: MarkdownBody(
                   data: _aiSummary!,
-                  styleSheet: MarkdownStyleSheet(
-                    p: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    h1: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    h2: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    h3: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    strong: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    em: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    code: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontFamily: 'monospace',
-                      color: Theme.of(context).colorScheme.onSurface,
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withValues(alpha: 0.5),
-                    ),
-                    codeblockDecoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    codeblockPadding: const EdgeInsets.all(12),
-                    listBullet: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                    blockquote: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontStyle: FontStyle.italic,
-                        ),
-                    blockquoteDecoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 4,
-                        ),
-                      ),
-                    ),
-                    blockquotePadding: const EdgeInsets.only(left: 16),
-                  ),
+                  styleSheet: MarkdownStyles.fromTheme(theme),
                 ),
               ),
             ],
@@ -496,6 +421,39 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
         if (showDivider) const Divider(height: 1),
       ],
     );
+  }
+
+  Widget _buildCopyButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onPressed,
+    bool showLabel = true,
+  }) {
+    if (showLabel) {
+      return OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 16),
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          minimumSize: const Size(0, 32),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      );
+    } else {
+      return Tooltip(
+        message: label,
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.all(12),
+            minimumSize: const Size(32, 32),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Icon(icon, size: 16),
+        ),
+      );
+    }
   }
 
   Widget _buildSummaryChip(String label, String value) {
@@ -527,6 +485,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
           _isGeneratingSummary = false;
           // Auto-expand when generating a new summary
           _isSummaryExpanded = true;
+          _summaryKey++; // Force ExpansionTile to rebuild with new initiallyExpanded value
         });
       }
     } catch (e) {
@@ -540,6 +499,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   }
 
   Widget _buildWideModeCommitItem(GitHubCommit commit) {
+    final theme = Theme.of(context);
     final isSelected = _selectedCommit?.sha == commit.sha;
     final date = commit.date != null
         ? DateFormat('MMM d, y • h:mm a').format(commit.date!)
@@ -553,75 +513,61 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
       },
       child: Container(
         color: isSelected
-            ? Theme.of(
-                context,
-              ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
             : null,
         child: ListTile(
-          leading: Icon(
-            Icons.commit,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          leading: Icon(Icons.commit, color: theme.colorScheme.primary),
           title: Text(
             commit.message.split('\n').first,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    Icons.person,
-                    size: 14,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    commit.author,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.access_time,
-                    size: 14,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(date, style: Theme.of(context).textTheme.bodySmall),
-                  const SizedBox(width: 16),
-                  Text(
-                    commit.sha.substring(0, 7),
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
-                  ),
-                ],
-              ),
-              if (commit.files.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  '${commit.files.length} file${commit.files.length > 1 ? 's' : ''} changed',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ],
-          ),
+          subtitle: _buildCommitSubtitle(commit, date, theme),
           trailing: isSelected
-              ? Icon(
-                  Icons.check_circle,
-                  color: Theme.of(context).colorScheme.primary,
-                )
+              ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
               : const Icon(Icons.chevron_right),
         ),
       ),
+    );
+  }
+
+  Widget _buildCommitSubtitle(
+    GitHubCommit commit,
+    String date,
+    ThemeData theme,
+  ) {
+    final mutedColor = theme.colorScheme.onSurface.withValues(alpha: 0.6);
+    final textStyle = theme.textTheme.bodySmall;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Icon(Icons.person, size: 14, color: mutedColor),
+            const SizedBox(width: 4),
+            Text(commit.author, style: textStyle),
+            const SizedBox(width: 16),
+            Icon(Icons.access_time, size: 14, color: mutedColor),
+            const SizedBox(width: 4),
+            Text(date, style: textStyle),
+            const SizedBox(width: 16),
+            Text(
+              commit.sha.substring(0, 7),
+              style: textStyle?.copyWith(fontFamily: 'monospace'),
+            ),
+          ],
+        ),
+        if (commit.files.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            '${commit.files.length} file${commit.files.length > 1 ? 's' : ''} changed',
+            style: textStyle,
+          ),
+        ],
+      ],
     );
   }
 
@@ -630,6 +576,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -637,13 +584,13 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             children: [
-              Icon(Icons.code, color: Theme.of(context).colorScheme.primary),
+              Icon(Icons.code, color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 'File Changes',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

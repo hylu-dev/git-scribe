@@ -172,6 +172,8 @@ Produce a branch summary that EXACTLY follows the structure below. Do not add, r
 # Title (REQUIRED)
 - The first line MUST be a single markdown H1 title: `# ` + 3–8 descriptive words.
 - This line must contain ONLY the title.
+- Use proper title case: capitalize the first letter of each major word (nouns, verbs, adjectives, adverbs).
+- Keep articles (a, an, the), prepositions (in, on, at, for, etc.), and conjunctions (and, or, but, etc.) lowercase unless they are the first word.
 
 <blank line>
 
@@ -189,7 +191,7 @@ Summary
 - Sub-bullets (optional) use two spaces + `- `.
 
 Example:
-# Add user authentication
+# Add User Authentication
 
 Implements user sign-in so players can save progress and access protected endpoints.
 
@@ -205,7 +207,7 @@ Implements user sign-in so players can save progress and access protected endpoi
 - Improved error display for invalid credentials.
 
 Formatting rules (strict):
-1. First line = ONLY an H1 title.
+1. First line = ONLY an H1 title with proper title case capitalization.
 2. One blank line → plain-text summary paragraph.
 3. One blank line → `## Key Changes`.
 4. Each main change = its own `###` heading.

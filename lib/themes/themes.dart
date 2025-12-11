@@ -144,27 +144,35 @@ class Themes {
     theme: _buildRosePine(),
   );
 
-  /// Get all programming themes ordered by popularity
-  /// Material defaults are kept at the topp
+  /// Get all programming themes in a logical order:
+  /// 1. Material defaults
+  /// 2. Popular editor/platform themes
+  /// 3. Dark/light pairs grouped together
+  /// 4. Other popular themes
   static List<AppTheme> get all => [
-    // Material defaults at top
+    // Material defaults
     flutterDefault,
     flutterLight,
-    // Most popular themes
+    // Popular editor/platform themes
     vsCodeDark,
     githubDark,
     oneDark,
+    // Very popular standalone themes
     dracula,
     nord,
+    // Catppuccin (dark/light pair)
     catppuccinMocha,
+    catppuccinLatte,
+    // Solarized (dark/light pair)
+    solarizedDark,
+    solarizedLight,
+    // Ayu (dark/light pair)
+    ayuDark,
+    ayuLight,
+    // Other popular themes
     tokyoNight,
     gruvbox,
     monokai,
-    solarizedDark,
-    solarizedLight, // moved here, right after solarizedDark
-    ayuDark,
-    catppuccinLatte,
-    ayuLight,
     tomorrowNight,
     everforestDark,
     rosePine,
