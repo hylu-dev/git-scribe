@@ -53,12 +53,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _loadRepositories({bool forceRefresh = false}) async {
-    if (!GitHubAccessGuard.ensureAccess(
-      context,
-      mounted: mounted,
-      showMessage: true,
-      message: 'Please sign in to access your repositories',
-    )) {
+    if (!GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
       return;
     }
 
@@ -108,12 +103,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<List<GitHubRepository>> _loadMoreRepositories(int page) async {
-    if (!GitHubAccessGuard.ensureAccess(
-      context,
-      mounted: mounted,
-      showMessage: true,
-      message: 'Please sign in to access your repositories',
-    )) {
+    if (!GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
       return [];
     }
 

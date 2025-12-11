@@ -16,7 +16,7 @@ class GitHubAccessGuard {
   static bool ensureAccess(
     BuildContext context, {
     bool mounted = true,
-    bool showMessage = true,
+    bool showMessage = false,
     String? message,
   }) {
     if (_hasToken()) return true;

@@ -57,12 +57,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   }
 
   Future<void> _loadBranches({bool forceRefresh = false}) async {
-    if (!GitHubAccessGuard.ensureAccess(
-      context,
-      mounted: mounted,
-      showMessage: true,
-      message: 'Please sign in to access repository branches',
-    )) {
+    if (!GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
       return;
     }
 
@@ -101,12 +96,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   }
 
   Future<List<GitHubBranch>> _loadMoreBranches(int page) async {
-    if (!GitHubAccessGuard.ensureAccess(
-      context,
-      mounted: mounted,
-      showMessage: true,
-      message: 'Please sign in to access repository branches',
-    )) {
+    if (!GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
       return [];
     }
 

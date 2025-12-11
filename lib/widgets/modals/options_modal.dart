@@ -254,12 +254,7 @@ class _OptionsModalState extends State<OptionsModal> {
   }
 
   Future<void> _handleRequestOrganizationAccess() async {
-    if (!GitHubAccessGuard.ensureAccess(
-      context,
-      mounted: mounted,
-      showMessage: true,
-      message: 'Please sign in to request organization access',
-    )) {
+    if (!GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
       return;
     }
 

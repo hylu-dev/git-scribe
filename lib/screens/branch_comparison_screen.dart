@@ -52,12 +52,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   }
 
   Future<void> _loadComparison({bool forceRefresh = false}) async {
-    if (!GitHubAccessGuard.ensureAccess(
-      context,
-      mounted: mounted,
-      showMessage: true,
-      message: 'Please sign in to access branch comparison',
-    )) {
+    if (!GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
       return;
     }
 
