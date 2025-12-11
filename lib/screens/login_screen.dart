@@ -16,18 +16,12 @@ class LoginScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const AppLogo(
-              width: 120,
-              height: 120,
-            ),
+            const AppLogo(width: 120, height: 120),
             const SizedBox(height: 16),
-            Text(
-              'GitScribe',
-              style: Theme.of(context).textTheme.headlineLarge,
-            ),
+            Text('GitScribe', style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 8),
             Text(
-              'AI-powered GitHub branch analysis',
+              'Intelligent Insights for Every Commit',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(
                   context,
