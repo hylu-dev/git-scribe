@@ -5,6 +5,8 @@
 
 **Intelligent Insights for Every Commit**
 
+![](demo.gif)
+
 GitScribe helps you understand your GitHub repository changes through AI-generated summaries. Browse repositories, compare branches, and get intelligent insights into code changes. You can use your own AI, including local models through Ollama.
 
 ## Features
