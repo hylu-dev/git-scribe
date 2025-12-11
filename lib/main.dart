@@ -12,7 +12,12 @@ Future<void> main() async {
 
   // Load environment variables from .env file only if compile-time vars are not available
   if (Env.needsDotenv) {
-    await dotenv.load(fileName: '.env');
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (e) {
+      // .env file not found - this is OK if using compile-time defines in release builds
+      // The Env class will throw a helpful error if neither compile-time nor .env vars are available
+    }
   }
 
   // Initialize Supabase

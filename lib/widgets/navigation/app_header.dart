@@ -23,6 +23,7 @@ class _AppHeaderState extends State<AppHeader> {
     final displayName = authService.userDisplayName ?? 'User';
     final avatarUrl = authService.userAvatarUrl;
     final email = authService.userEmail;
+    final showEmail = MediaQuery.of(context).size.width > 600;
 
     return Column(
       children: [
@@ -55,66 +56,44 @@ class _AppHeaderState extends State<AppHeader> {
                   ),
                 ),
               ),
-              Expanded(child: Container()), // Spacer that can shrink
-              // User info - flexible to prevent overflow
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  final showEmail =
-                      screenWidth > 600; // Hide email on small screens
-
-                  return Flexible(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (avatarUrl != null)
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundImage: NetworkImage(avatarUrl),
-                          )
-                        else
-                          CircleAvatar(
-                            radius: 16,
-                            child: Text(
-                              displayName[0].toUpperCase(),
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ),
-                        if (screenWidth > 400) ...[
-                          // Only show text if there's enough space
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  displayName,
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(fontWeight: FontWeight.w500),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                                if (showEmail && email != null)
-                                  Text(
-                                    email,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
+              const Spacer(),
+              // User info
+              Row(
+                children: [
+                  if (avatarUrl != null)
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundImage: NetworkImage(avatarUrl),
+                    )
+                  else
+                    CircleAvatar(
+                      radius: 16,
+                      child: Text(
+                        displayName[0].toUpperCase(),
+                        style: const TextStyle(fontSize: 14),
+                      ),
                     ),
-                  );
-                },
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        displayName,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (email != null && showEmail)
+                        Text(
+                          email,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 16),
               // Theme selector
               IconButton(
                 icon: const Icon(Icons.palette),
