@@ -1,12 +1,9 @@
-<div align="center" style="display: flex; gap: 20px; margin-bottom: 1rem">
-  <img src="assets/icons/logo_dark.svg" alt="GitScribe Logo" height="86"/>
-  <div style="display: flex; flex-direction: column; align-items: flex-start;">
-    <h1 style="margin: 0;">GitScribe</h1>
-    <strong style="margin-top: 4px;">Intelligent Insights for Every Commit</strong>
-  </div>
-</div>
+![](assets/icons/logo_dark.svg)
+# GitScribe
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/27eacb57-b520-433b-8b54-ae350d2a3f6d/deploy-status)](https://app.netlify.com/projects/git-scribe/deploys)
+
+**Intelligent Insights for Every Commit**
 
 GitScribe helps you understand your GitHub repository changes through AI-generated summaries. Browse repositories, compare branches, and get intelligent insights into code changes. You can use your own AI, including local models through Ollama.
 
@@ -59,7 +56,7 @@ GitScribe helps you understand your GitHub repository changes through AI-generat
 
 ## Contributing
 
-Do keep in mind I'm a first time flutter developer and AI heavily aided my in developing this app. Otherwise, feel free to make a contribution!
+Do keep in mind I'm a first time flutter developer and AI heavily aided my development this app. Otherwise, feel free to make a contribution!
 
 ## License
 
