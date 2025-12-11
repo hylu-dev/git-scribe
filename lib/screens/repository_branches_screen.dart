@@ -233,14 +233,6 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideLayout = screenWidth >= 800;
 
-    if (isWideLayout) {
-      return _buildWideBranchesList();
-    } else {
-      return _buildMobileBranchesList();
-    }
-  }
-
-  Widget _buildMobileBranchesList() {
     return LazyLoadListView<GitHubBranch>(
       items: _branches,
       itemBuilder: (context, branch, index) {
@@ -259,38 +251,14 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
         8,
         80,
       ), // Extra bottom padding for FAB
-    );
-  }
-
-  Widget _buildWideBranchesList() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    // Calculate columns: 2 for tablets (800-1200px), 3 for larger screens
-    final crossAxisCount = screenWidth >= 1200 ? 3 : 2;
-
-    return LazyLoadListView<GitHubBranch>(
-      items: _branches,
-      itemBuilder: (context, branch, index) {
-        return BranchCard(
-          branch: branch,
-          owner: widget.owner,
-          repoName: widget.repoName,
-        );
-      },
-      loadMore: _loadMoreBranches,
-      hasMore: _hasMore,
-      isLoadingMore: _isLoadingMore,
-      padding: const EdgeInsets.fromLTRB(
-        8,
-        8,
-        8,
-        80,
-      ), // Extra bottom padding for FAB
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 2.5,
-      ),
+      gridDelegate: isWideLayout
+          ? const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 500,
+              mainAxisExtent: 160,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            )
+          : null,
     );
   }
 }
