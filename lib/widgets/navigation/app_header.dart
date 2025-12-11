@@ -23,6 +23,7 @@ class _AppHeaderState extends State<AppHeader> {
     final displayName = authService.userDisplayName ?? 'User';
     final avatarUrl = authService.userAvatarUrl;
     final email = authService.userEmail;
+    final showEmail = MediaQuery.of(context).size.width > 600;
 
     return Column(
       children: [
@@ -83,7 +84,7 @@ class _AppHeaderState extends State<AppHeader> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      if (email != null)
+                      if (email != null && showEmail)
                         Text(
                           email,
                           style: Theme.of(context).textTheme.bodySmall,
