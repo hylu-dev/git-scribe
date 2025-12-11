@@ -1,0 +1,213 @@
+name: Standalone Multi-Platform Build
+
+on:
+  # Uncomment to run automatically on push/PR
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
+
+  workflow_dispatch:
+    inputs:
+      os_to_build:
+        description: 'Select OS(es) to build'
+        required: true
+        type: choice
+        options:
+          - '["linux", "windows", "macos", "android"]'
+          - '["android"]'
+          - '["linux", "windows", "macos"]'
+          - '["linux", "windows"]'
+          - '["linux", "macos"]'
+          - '["windows", "macos"]'
+          - '["linux"]'
+          - '["windows"]'
+          - '["macos"]'
+
+jobs:
+  # ──────────────────────────────
+  # Linux Desktop
+  # ──────────────────────────────
+  build_linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    if: contains(fromJSON(github.event.inputs.os_to_build), 'linux')
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter Environment
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Install Linux Build Dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev libsecret-1-dev
+
+      - name: Build Release Artifact
+        run: >
+          flutter build linux --release
+          --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+          --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+      - name: Package Artifact
+        run: |
+          mkdir -p dist/gitscribe-linux
+          cp -r build/linux/x64/release/bundle/* dist/gitscribe-linux/
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: dist/gitscribe-linux
+          retention-days: 7
+
+  # ──────────────────────────────
+  # Windows Desktop
+  # ──────────────────────────────
+  build_windows:
+    name: Build Windows
+    runs-on: windows-latest
+    if: contains(fromJSON(github.event.inputs.os_to_build), 'windows')
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter Environment
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build Release Artifact
+        run: >
+          flutter build windows --release
+          --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+          --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+      - name: Package Artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/gitscribe-windows
+          Copy-Item -Path build/windows/x64/runner/Release/* -Destination dist/gitscribe-windows -Recurse -Force
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: dist/gitscribe-windows
+          retention-days: 7
+
+  # ──────────────────────────────
+  # macOS Desktop
+  # ──────────────────────────────
+  build_macos:
+    name: Build macOS
+    runs-on: macos-latest
+    if: contains(fromJSON(github.event.inputs.os_to_build), 'macos')
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter Environment
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build Release Artifact
+        run: >
+          flutter build macos --release
+          --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+          --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+      - name: Package Artifact
+        run: |
+          mkdir -p dist/gitscribe-macos
+          cp -r build/macos/Build/Products/Release/*.app dist/gitscribe-macos/
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: dist/gitscribe-macos
+          retention-days: 7
+
+  # ──────────────────────────────
+  # Android (APK + AppBundle)
+  # ──────────────────────────────
+  build_android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    if: contains(fromJSON(github.event.inputs.os_to_build), 'android')
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      # Optional: run tests
+      # - name: Run Flutter tests
+      #   run: flutter test
+
+      - name: Build APK (universal)
+        run: >
+          flutter build apk --release
+          --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+          --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+      - name: Build AppBundle (Google Play)
+        run: >
+          flutter build appbundle --release
+          --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}"
+          --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
+
+      - name: Prepare Android artifacts
+        run: |
+          mkdir -p dist/android
+          cp build/app/outputs/flutter-apk/app-release.apk dist/android/gitscribe-android.apk
+          cp build/app/outputs/bundle/release/app-release.aab dist/android/gitscribe-android.aab
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: dist/android
+          retention-days: 7

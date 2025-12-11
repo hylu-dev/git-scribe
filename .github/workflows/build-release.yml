@@ -1,4 +1,4 @@
-name: Desktop & Mobile CI Build
+name: Multi-Platform Release Build
 
 on:
   # Uncomment to run automatically on push/PR
@@ -23,12 +23,70 @@ on:
           - '["linux"]'
           - '["windows"]'
           - '["macos"]'
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Additional release notes (optional, auto-generated notes will be used)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
+  # ──────────────────────────────
+  # Create Release and Tag
+  # ──────────────────────────────
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create Tag
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, deleting it"
+            git tag -d "$TAG" || true
+            git push origin ":refs/tags/$TAG" || true
+          fi
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: Release ${{ github.event.inputs.tag }}
+          generate_release_notes: true
+          body: |
+            ${{ github.event.inputs.release_notes }}
+            
+            ## Artifacts
+            
+            This release includes builds for the selected platforms.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   # ──────────────────────────────
   # Linux Desktop
   # ──────────────────────────────
   build_linux:
+    needs: create_release
     name: Build Linux
     runs-on: ubuntu-latest
     if: contains(fromJSON(github.event.inputs.os_to_build), 'linux')
@@ -63,13 +121,15 @@ jobs:
         run: |
           mkdir -p dist/gitscribe-linux
           cp -r build/linux/x64/release/bundle/* dist/gitscribe-linux/
+          cd dist/gitscribe-linux
+          tar -czf ../gitscribe-linux.tar.gz .
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: linux-release
-          path: dist/gitscribe-linux
-          retention-days: 7
+          files: dist/gitscribe-linux.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ──────────────────────────────
   # Windows Desktop
@@ -77,6 +137,7 @@ jobs:
   build_windows:
     name: Build Windows
     runs-on: windows-latest
+    needs: create_release
     if: contains(fromJSON(github.event.inputs.os_to_build), 'windows')
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -105,13 +166,14 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path dist/gitscribe-windows
           Copy-Item -Path build/windows/x64/runner/Release/* -Destination dist/gitscribe-windows -Recurse -Force
+          Compress-Archive -Path dist/gitscribe-windows/* -DestinationPath dist/gitscribe-windows.zip -Force
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: windows-release
-          path: dist/gitscribe-windows
-          retention-days: 7
+          files: dist/gitscribe-windows.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ──────────────────────────────
   # macOS Desktop
@@ -119,6 +181,7 @@ jobs:
   build_macos:
     name: Build macOS
     runs-on: macos-latest
+    needs: create_release
     if: contains(fromJSON(github.event.inputs.os_to_build), 'macos')
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -146,13 +209,15 @@ jobs:
         run: |
           mkdir -p dist/gitscribe-macos
           cp -r build/macos/Build/Products/Release/*.app dist/gitscribe-macos/
+          cd dist/gitscribe-macos
+          zip -r ../gitscribe-macos.zip *.app
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: macos-release
-          path: dist/gitscribe-macos
-          retention-days: 7
+          files: dist/gitscribe-macos.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ──────────────────────────────
   # Android (APK + AppBundle)
@@ -160,6 +225,7 @@ jobs:
   build_android:
     name: Build Android
     runs-on: ubuntu-latest
+    needs: create_release
     if: contains(fromJSON(github.event.inputs.os_to_build), 'android')
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -205,9 +271,11 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk dist/android/gitscribe-android.apk
           cp build/app/outputs/bundle/release/app-release.aab dist/android/gitscribe-android.aab
 
-      - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: android-release
-          path: dist/android
-          retention-days: 7
+          files: |
+            dist/android/gitscribe-android.apk
+            dist/android/gitscribe-android.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
