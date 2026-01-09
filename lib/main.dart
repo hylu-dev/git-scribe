@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'models/theme_model.dart';
 import 'themes/themes.dart';
-import 'services/env.dart';
+import 'utils/env.dart';
 import 'services/ai_service.dart';
 import 'app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables from .env file only if compile-time vars are not available
-  if (Env.needsDotenv) {
-    try {
-      await dotenv.load(fileName: '.env');
-    } catch (e) {
-      // .env file not found - this is OK if using compile-time defines in release builds
-      // The Env class will throw a helpful error if neither compile-time nor .env vars are available
-    }
+  // Ensure Supabase is configured
+  if (!Env.isConfigured) {
+    debugPrint(
+      'Warning: Supabase is not configured. Some features may not work.',
+    );
   }
 
   // Initialize Supabase

@@ -39,10 +39,6 @@ GitScribe helps you understand your GitHub repository changes through AI-generat
    - Create a project at [Supabase](https://supabase.com)
    - Copy your Project URL and anon key
    - Create `.env` file:
-     ```env
-     SUPABASE_URL=your_supabase_project_url
-     SUPABASE_ANON_KEY=your_supabase_anon_key
-     ```
 
 3. **Set up GitHub OAuth:**
    - In Supabase: Enable GitHub provider in Authentication → Providers
@@ -55,6 +51,11 @@ GitScribe helps you understand your GitHub repository changes through AI-generat
    - Select AI provider and enter API key
    - Keys are stored securely
 
+### Release Build Command
+
+```bash
+flutter build web --release --dart-define=SUPABASE_URL="$SUPABASE_URL" --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+```
 
 ## Contributing
 
