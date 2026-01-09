@@ -1,4 +1,4 @@
-import '../../models/ai_message.dart';
+import '../../../models/ai_message.dart';
 
 /// Abstract base class for AI providers
 abstract class AIProvider {
@@ -29,4 +29,3 @@ abstract class AIProvider {
   /// Returns true if the provider is working correctly
   Future<bool> testConnection();
 }
-
