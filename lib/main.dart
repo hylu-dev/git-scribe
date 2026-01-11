@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'models/theme_model.dart';
 import 'themes/themes.dart';
 import 'utils/env.dart';
-import 'services/ai/ai_service.dart';
 import 'app_router.dart';
 
 Future<void> main() async {
@@ -18,9 +17,6 @@ Future<void> main() async {
 
   // Initialize Supabase
   await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseAnonKey);
-
-  // Load saved AI provider configuration
-  await AIService().loadSavedConfiguration();
 
   runApp(const MyApp());
 }
