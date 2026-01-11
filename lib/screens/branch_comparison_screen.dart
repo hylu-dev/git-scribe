@@ -61,7 +61,7 @@ class _BranchOverviewScreenState extends State<BranchOverviewScreen> {
   }
 
   Future<void> _loadComparison({bool forceRefresh = false}) async {
-    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
+    if (!await GitHubAccessGuard.ensureAccess(context)) {
       return;
     }
 

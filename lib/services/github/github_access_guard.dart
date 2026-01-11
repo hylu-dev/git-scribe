@@ -47,13 +47,12 @@ class GitHubAccessGuard {
   /// This method will attempt to refresh expired sessions before checking for the token.
   static Future<bool> ensureAccess(
     BuildContext context, {
-    bool mounted = true,
     bool showMessage = false,
     String? message,
   }) async {
     if (await _hasToken()) return true;
 
-    if (mounted) {
+    if (context.mounted) {
       if (showMessage) {
         Toast.error(context, message ?? 'Please sign in to GitHub.');
       }

@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _loadRepositories({bool forceRefresh = false}) async {
-    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
+    if (!await GitHubAccessGuard.ensureAccess(context)) {
       return;
     }
 
@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<List<GitHubRepository>> _loadMoreRepositories(int page) async {
-    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
+    if (!await GitHubAccessGuard.ensureAccess(context)) {
       return [];
     }
 

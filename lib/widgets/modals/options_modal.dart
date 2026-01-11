@@ -254,7 +254,7 @@ class _OptionsModalState extends State<OptionsModal> {
   }
 
   Future<void> _handleRequestOrganizationAccess() async {
-    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
+    if (!await GitHubAccessGuard.ensureAccess(context)) {
       return;
     }
 
