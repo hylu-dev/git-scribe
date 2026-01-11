@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import '../services/auth/auth_service.dart';
 import '../widgets/common/github_login_button.dart';
 import '../widgets/common/toast.dart';
 import '../widgets/common/app_logo.dart';

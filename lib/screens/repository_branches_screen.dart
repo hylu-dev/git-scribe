@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/github_access_guard.dart';
-import '../services/github_service.dart';
+import '../services/github/github_access_guard.dart';
+import '../services/github/github_service.dart';
 import '../models/github_branch.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';

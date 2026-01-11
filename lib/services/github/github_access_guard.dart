@@ -2,8 +2,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-import '../widgets/common/toast.dart';
-import 'supabase_service.dart';
+import '../../widgets/common/toast.dart';
+import '../supabase_service.dart';
 
 /// Centralized helper to ensure GitHub access is available.
 /// If no provider token is present, optionally shows a message and

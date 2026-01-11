@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/github_repository.dart';
-import '../models/github_branch.dart';
-import '../models/github_comparison.dart';
-import 'supabase_service.dart';
-import 'cache_service.dart';
+import '../../models/github_repository.dart';
+import '../../models/github_branch.dart';
+import '../../models/github_comparison.dart';
+import '../supabase_service.dart';
+import '../cache_service.dart';
 
 /// Service for interacting with GitHub API
 class GitHubService {

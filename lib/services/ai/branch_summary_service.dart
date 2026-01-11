@@ -1,7 +1,7 @@
-import '../models/github_comparison.dart';
-import '../models/ai_message.dart';
+import '../../models/github_comparison.dart';
+import '../../models/ai_message.dart';
 import 'ai_service.dart';
-import 'cache_service.dart';
+import '../cache_service.dart';
 
 /// Service for generating AI-powered branch summaries
 class BranchSummaryService {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../services/ai_service.dart';
-import '../../services/auth_service.dart';
-import '../../services/github_access_guard.dart';
+import '../../services/ai/ai_service.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/github/github_access_guard.dart';
 import '../common/toast.dart';
 
 /// Modal dialog for app options including AI provider config and logout
