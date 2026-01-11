@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/github_service.dart';
+import '../services/github/github_service.dart';
 import '../models/github_repository.dart';
-import '../services/github_access_guard.dart';
+import '../services/github/github_access_guard.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
 import '../widgets/cards/repository_card.dart';
@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _loadRepositories({bool forceRefresh = false}) async {
-    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
+    if (!await GitHubAccessGuard.ensureAccess(context)) {
       return;
     }
 
@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<List<GitHubRepository>> _loadMoreRepositories(int page) async {
-    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
+    if (!await GitHubAccessGuard.ensureAccess(context)) {
       return [];
     }
 

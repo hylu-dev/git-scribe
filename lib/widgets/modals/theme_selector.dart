@@ -114,7 +114,7 @@ class _ThemeSelectorContentState extends State<_ThemeSelectorContent> {
                       // Commit the theme selection
                       _themeCommitted = true;
                       await widget.themeModel.setTheme(theme);
-                      if (mounted) {
+                      if (context.mounted) {
                         Navigator.pop(
                           context,
                           true,

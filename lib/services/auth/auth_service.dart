@@ -1,7 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'supabase_service.dart';
+import '../supabase_service.dart';
 import 'oauth_callback_server.dart';
 
 /// Service for handling authentication

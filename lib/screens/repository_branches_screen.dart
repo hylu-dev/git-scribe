@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/github_access_guard.dart';
-import '../services/github_service.dart';
+import '../services/github/github_access_guard.dart';
+import '../services/github/github_service.dart';
 import '../models/github_branch.dart';
 import '../widgets/navigation/app_header.dart';
 import '../widgets/navigation/breadcrumbs.dart';
@@ -57,7 +57,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   }
 
   Future<void> _loadBranches({bool forceRefresh = false}) async {
-    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
+    if (!await GitHubAccessGuard.ensureAccess(context)) {
       return;
     }
 
@@ -96,7 +96,7 @@ class _RepositoryBranchesScreenState extends State<RepositoryBranchesScreen> {
   }
 
   Future<List<GitHubBranch>> _loadMoreBranches(int page) async {
-    if (!await GitHubAccessGuard.ensureAccess(context, mounted: mounted)) {
+    if (!await GitHubAccessGuard.ensureAccess(context)) {
       return [];
     }
 

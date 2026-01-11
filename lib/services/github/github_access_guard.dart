@@ -2,8 +2,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-import '../widgets/common/toast.dart';
-import 'supabase_service.dart';
+import '../../widgets/common/toast.dart';
+import '../supabase_service.dart';
 
 /// Centralized helper to ensure GitHub access is available.
 /// If no provider token is present, optionally shows a message and
@@ -47,13 +47,12 @@ class GitHubAccessGuard {
   /// This method will attempt to refresh expired sessions before checking for the token.
   static Future<bool> ensureAccess(
     BuildContext context, {
-    bool mounted = true,
     bool showMessage = false,
     String? message,
   }) async {
     if (await _hasToken()) return true;
 
-    if (mounted) {
+    if (context.mounted) {
       if (showMessage) {
         Toast.error(context, message ?? 'Please sign in to GitHub.');
       }

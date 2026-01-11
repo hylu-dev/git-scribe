@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../services/auth_service.dart';
+import '../../services/auth/auth_service.dart';
 import '../modals/theme_selector.dart';
 import 'breadcrumbs.dart';
 import '../modals/options_modal.dart';

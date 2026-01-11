@@ -1,10 +1,10 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../models/ai_message.dart';
-import 'ai/ai_provider.dart';
-import 'ai/providers/openai_provider.dart';
-import 'ai/providers/anthropic_provider.dart';
-import 'ai/providers/gemini_provider.dart';
-import 'ai/providers/ollama_provider.dart';
+import '../../models/ai_message.dart';
+import 'providers/ai_provider.dart';
+import 'providers/openai_provider.dart';
+import 'providers/anthropic_provider.dart';
+import 'providers/gemini_provider.dart';
+import 'providers/ollama_provider.dart';
 
 /// Supported AI providers
 enum AIProviderType { openai, anthropic, gemini, ollama }
@@ -21,16 +21,15 @@ class AIService {
   String? _ollamaBaseUrl; // Only used for Ollama
   AIProvider? _provider;
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
   );
 
   /// Get storage key for a provider's API key
-  String _getApiKeyKey(AIProviderType type) => 'ai_provider_${type.name}_api_key';
+  String _getApiKeyKey(AIProviderType type) =>
+      'ai_provider_${type.name}_api_key';
 
   /// Get storage key for a provider's base URL (Ollama only)
   String _getBaseUrlKey() => 'ai_provider_ollama_base_url';
@@ -53,9 +52,7 @@ class AIService {
     final providerName = await _storage.read(key: _getSelectedProviderKey());
     if (providerName == null) return null;
     try {
-      return AIProviderType.values.firstWhere(
-        (e) => e.name == providerName,
-      );
+      return AIProviderType.values.firstWhere((e) => e.name == providerName);
     } catch (e) {
       return null;
     }
@@ -83,7 +80,7 @@ class AIService {
     if (saveToStorage) {
       // Save selected provider
       await _storage.write(key: _getSelectedProviderKey(), value: type.name);
-      
+
       // Save API key for this provider
       if (apiKey != null && apiKey.isNotEmpty) {
         await _storage.write(key: _getApiKeyKey(type), value: apiKey);
@@ -111,7 +108,7 @@ class AIService {
 
     // Load saved API key for this provider
     final savedApiKey = await getSavedApiKey(savedProvider);
-    
+
     // Load saved base URL if Ollama
     String? savedBaseUrl;
     if (savedProvider == AIProviderType.ollama) {
@@ -133,13 +130,13 @@ class AIService {
     for (final provider in AIProviderType.values) {
       await _storage.delete(key: _getApiKeyKey(provider));
     }
-    
+
     // Clear Ollama base URL
     await _storage.delete(key: _getBaseUrlKey());
-    
+
     // Clear selected provider
     await _storage.delete(key: _getSelectedProviderKey());
-    
+
     // Clear current in-memory configuration
     _providerType = null;
     _apiKey = null;

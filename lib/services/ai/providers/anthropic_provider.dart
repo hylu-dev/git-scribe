@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../models/ai_message.dart';
-import '../ai_provider.dart';
+import 'ai_provider.dart';
 
 /// Anthropic (Claude) API provider implementation
 class AnthropicProvider implements AIProvider {
